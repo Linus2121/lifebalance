@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),install=req
 function setup(){
  let pending=[],delivered=[],scheduled=[],cancelled=[],perm='granted',fail=false;
  const D={demo:false,push:{enabled:false},snoozes:{},alerts:[]};
- const LB={D,personal:{settings:{showDetails:false},events:[{id:'e',exceptions:{}}]},ui:{},saveD(){},render(){},toast(){},actions:{snooze(){return false}},rem:{buildSchedule:()=>[],prune(){},init:async()=>{}}};
+ const LB={D,C:{remindersBetween:()=>[],reminderText:()=>({})},personal:{settings:{showDetails:false},events:[{id:'e',exceptions:{}}]},ui:{},saveD(){},render(){},toast(){},actions:{snooze(){return false}},rem:{buildSchedule:()=>[],prune(){},init:async()=>{}}};
  const N={checkPermissions:async()=>({display:perm}),requestPermissions:async()=>({display:perm}),getPending:async()=>({notifications:pending}),getDeliveredNotifications:async()=>({notifications:delivered}),removeDeliveredNotifications:async()=>{},removeAllDeliveredNotifications:async()=>{},cancel:async({notifications})=>{cancelled.push(...notifications);pending=pending.filter(n=>!notifications.some(x=>x.id===n.id));},schedule:async({notifications})=>{if(fail)throw Error('OS rejected');scheduled.push(...notifications);pending.push(...notifications);}};
  const adapter=install(LB,N,{});return {LB,N,adapter,get pending(){return pending},get scheduled(){return scheduled},get cancelled(){return cancelled},set permission(v){perm=v},set fail(v){fail=v}};
 }

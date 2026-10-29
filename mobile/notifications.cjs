@@ -4,6 +4,7 @@ module.exports = function install(LB, N, app) {
   let permission='prompt',timer,queue=Promise.resolve();
   D.nativeRem=Object.assign({enabled:false,status:'none',count:0,error:''},D.nativeRem);
   const state=D.nativeRem;
+  R.buildSchedule=()=>{const now=Date.now();if(D.receive===false)return [];return LB.C.remindersBetween(LB.personal,now,now+45*864e5,LB.tz).slice(0,300).map(r=>{const t=LB.C.reminderText(r,LB.personal.settings.showDetails,LB.tz);return {key:r.key,at:r.at,title:t.title,body:t.body,ev:r.occ?.evId||'',occKey:r.occ?.key||''};});};
   const refresh=()=>{LB.saveD();if(LB.ui.view==='settings')LB.render();};
   const revision=id=>{const e=LB.personal.events.find(x=>x.id===id);if(!e)return '';let h=0;for(const c of JSON.stringify(e))h=Math.imul(h,31)+c.charCodeAt(0)|0;return String(h);};
   const active=a=>{if(!a.evId)return true;const e=LB.personal.events.find(x=>x.id===a.evId);return !!e&&(!a.rev||a.rev===revision(a.evId))&&!e.cancelled&&!(e.exceptions?.[a.occKey]||{}).cancelled;};
@@ -15,7 +16,7 @@ module.exports = function install(LB, N, app) {
   async function reconcile(){
     try{
       permission=(await N.checkPermissions()).display;
-      const pending=(await N.getPending()).notifications.filter(n=>n.extra?.lb);
+      const pending=(await N.getPending()).notifications.filter(n=>n.extra?.lb||n.extra?.test);
       const enabled=state.enabled&&permission==='granted'&&D.receive!==false&&!D.demo;
       const delivered=(await N.getDeliveredNotifications()).notifications;
       const remove=delivered.filter(n=>n.extra?.lb&&(!enabled||!active(n.extra)||(!LB.personal.settings.showDetails&&n.body!=='You have a reminder.')));
@@ -25,7 +26,7 @@ module.exports = function install(LB, N, app) {
       items.sort((a,b)=>a.at-b.at||a.key.localeCompare(b.key));items=items.slice(0,300);
       const wanted=make(items),byId=new Map(wanted.map(n=>[n.id,n]));
       const same=(a,b)=>a&&b&&a.extra?.key===b.extra?.key&&a.extra?.at===b.extra?.at&&a.extra?.rev===b.extra?.rev&&a.title===b.title&&a.body===b.body;
-      const stale=pending.filter(n=>!same(n,byId.get(n.id)));
+      const stale=pending.filter(n=>n.extra?.test?!enabled:!same(n,byId.get(n.id)));
       if(stale.length)await N.cancel({notifications:stale.map(n=>({id:n.id}))});
       const existing=new Map(pending.map(n=>[n.id,n]));const fresh=wanted.filter(n=>!same(n,existing.get(n.id)));
       if(fresh.length)await N.schedule({notifications:fresh});
