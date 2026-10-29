@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#6c4cf1">
+<title>LifeBalance – lifestyle planner</title>
+<style>
+:root{--bg:#f5f3ff;--card:#fff;--ink:#1f1b3a;--muted:#5b5778;--brand:#6c4cf1;--brand-d:#4d33c4;--teal:#0e9f8e;--line:#e3dffa;--ok:#2f9e44;--r:18px}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;flex-direction:column}
+header.top{background:linear-gradient(120deg,#5b3fd9,#c2255c 60%,#b36200);color:#fff;padding:16px 20px}
+header.top{display:flex;align-items:center;gap:14px}
+.logo{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none;animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.logo{animation:none}}
+header.top h1{margin:0;font-size:1.5rem}
+header.top p{margin:0}
+.wrap{width:100%;max-width:880px;margin:0 auto;padding:16px 16px 110px;flex:1}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;gap:4px;padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:10}
+nav.tabs button{flex:1;max-width:200px;min-height:56px;border:0;background:none;border-radius:14px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center}
+nav.tabs button .ic{font-size:1.4rem;line-height:1.2}
+nav.tabs button[aria-current=page]{background:#ece8ff;color:var(--brand-d)}
+@media(min-width:760px){
+ header.top{order:-2}
+ nav.tabs{position:sticky;top:0;bottom:auto;order:-1;border-top:0;border-bottom:1px solid var(--line);padding:8px}
+ nav.tabs button{flex-direction:row;gap:8px;max-width:180px;min-height:48px}
+ .wrap{padding-bottom:30px}
+ .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+ .grid2>.card{margin-bottom:0}
+}
+h2{font-size:1.25rem;margin:4px 0 10px}
+h3{font-size:1.05rem;margin:0 0 8px}
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(80,60,180,.08)}
+.grid2{margin-bottom:14px}
+.muted{color:var(--muted)}
+button,input,textarea,select{font:inherit}
+.btn{min-height:48px;min-width:48px;padding:8px 16px;border-radius:14px;border:2px solid var(--brand-d);background:var(--brand-d);color:#fff;font-weight:700;cursor:pointer}
+.btn.alt{background:#fff;color:var(--brand-d)}
+.btn.danger{background:#fff;color:#b02a37;border-color:#b02a37}
+.btn.sm{min-height:44px;padding:4px 12px}
+.btn:hover{filter:brightness(.95)}
+:focus-visible{outline:3px solid #f59f00;outline-offset:2px}
+input[type=text],input[type=number],textarea{width:100%;min-height:48px;padding:8px 12px;border:2px solid #b9b2e6;border-radius:12px;background:#fff;color:var(--ink)}
+textarea{min-height:110px;resize:vertical}
+label{font-weight:600;display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>.grow{flex:1;min-width:150px}
+.task{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.task:last-child{border-bottom:0}
+.task .chk{width:48px;height:48px;border-radius:50%;border:3px solid var(--brand-d);background:#fff;font-size:1.3rem;font-weight:800;color:#fff;cursor:pointer;flex:none}
+.task.done .chk{background:#237a35;border-color:#237a35}
+.task.done .t{text-decoration:line-through;color:var(--muted)}
+.task .t{flex:1;min-width:120px;word-break:break-word}
+.task .acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+form.task input{flex:1;min-width:140px}
+.star{background:#fff8e1;border:2px solid #f59f00}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;background:#ece8ff;color:var(--brand-d);font-weight:700;font-size:.85rem}
+.bar{height:14px;background:#ece8ff;border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px;transition:width .3s}
+.habit .head{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.stepper{display:flex;align-items:center;gap:10px;margin:10px 0}
+.stepper output{font-size:1.4rem;font-weight:800;min-width:90px;text-align:center}
+.moods{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.moods button{min-height:72px;border:3px solid var(--line);background:#fff;border-radius:14px;cursor:pointer;font-size:1.8rem;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;color:var(--ink)}
+.moods button small{font-size:.78rem;font-weight:600;color:var(--muted)}
+.moods button[aria-pressed=true]{border-color:var(--brand-d);background:#ece8ff}
+.empty{text-align:center;padding:20px 10px;color:var(--muted)}
+.empty .big{font-size:2.4rem}
+.tip{border-left:6px solid var(--teal);background:#e6fcf5;padding:10px 14px;border-radius:12px;margin:8px 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.stat{background:#f8f7ff;border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:1.7rem;color:var(--brand-d)}
+.ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.ach div{border:2px dashed #b9b2e6;border-radius:14px;padding:10px}
+.ach div.on{border:2px solid #f59f00;background:#fff8e1}
+svg.chart{width:100%;height:auto;display:block}
+svg text{font:12px system-ui,sans-serif;fill:#3d3a57}
+.entry{border-top:1px solid var(--line);padding:10px 0}
+.entry p{margin:4px 0;white-space:pre-wrap;word-break:break-word}
+footer{text-align:center;padding:14px 10px 90px;color:var(--muted);font-size:.9rem}
+@media(min-width:760px){footer{padding-bottom:20px}}
+.sr{position:absolute;left:-9999px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#1f1b3a;color:#fff;padding:10px 18px;border-radius:99px;z-index:20;max-width:90vw;text-align:center}
+@media(min-width:760px){.toast{bottom:30px}}
+</style>
+</head>
+<body>
+<header class="top"><img class="logo" src="logo.png" alt="LifeBalance logo" width="56" height="56"><div><h1>LifeBalance</h1><p>Small steps, balanced days.</p></div></header>
+<nav class="tabs" aria-label="Main navigation">
+ <button data-tab="today"><span class="ic" aria-hidden="true">📅</span>Today</button>
+ <button data-tab="habits"><span class="ic" aria-hidden="true">💧</span>Habits</button>
+ <button data-tab="journal"><span class="ic" aria-hidden="true">📔</span>Journal</button>
+ <button data-tab="progress"><span class="ic" aria-hidden="true">📈</span>Progress</button>
+</nav>
+<main class="wrap" id="app"></main>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<footer>Powered by Lamb Technologies</footer>
+
+<script>
+(function(){
+'use strict';
+const KEY='lifebalance.v1';
+const MOODS=[{k:1,e:'😞',n:'Low'},{k:2,e:'😕',n:'Meh'},{k:3,e:'😐',n:'Okay'},{k:4,e:'🙂',n:'Good'},{k:5,e:'😄',n:'Great'}];
+const DEFAULT_HABITS=()=>[
+ {id:'water',name:'Water',icon:'💧',unit:'glasses',goal:8,step:1,color:'#1c7ed6',builtin:true},
+ {id:'walk',name:'Walking',icon:'🚶',unit:'min',goal:30,step:5,color:'#0e9f8e',builtin:true},
+ {id:'exercise',name:'Exercise',icon:'🏋️',unit:'min',goal:30,step:5,color:'#d6336c',builtin:true},
+ {id:'read',name:'Reading',icon:'📖',unit:'min',goal:20,step:5,color:'#c77700',builtin:true},
+ {id:'sleep',name:'Sleep',icon:'😴',unit:'hours',goal:8,step:0.5,color:'#6c4cf1',builtin:true}];
+const COLORS=['#1c7ed6','#0e9f8e','#d6336c','#c77700','#6c4cf1','#2f9e44'];
+const pad=n=>String(n).padStart(2,'0');
+const dk=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>dk(new Date());
+const addDays=(k,n)=>{const [y,m,d]=k.split('-').map(Number);return dk(new Date(y,m-1,d+n));};
+const dayName=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString(undefined,{weekday:'short'});};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+function fresh(){return{tasks:[],habits:DEFAULT_HABITS(),logs:{},journal:[],sample:false};}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.tasks)&&Array.isArray(s.habits)&&Array.isArray(s.journal)&&s.logs)return s;}catch(e){}return fresh();}
+let S=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('Could not save – storage is full or blocked.');}}
+let tab=(location.hash||'#today').slice(1);
+if(!['today','habits','journal','progress'].includes(tab))tab='today';
+let ui={editTask:null,editGoal:null,mood:null,note:'',confirmClear:false,showHabitForm:false};
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2600);}
+
+const val=(d,h)=>(S.logs[d]&&S.logs[d][h])||0;
+const habitPct=(d,h)=>Math.min(1,val(d,h.id)/h.goal);
+const dayHabitPct=d=>S.habits.length?S.habits.reduce((a,h)=>a+habitPct(d,h),0)/S.habits.length:0;
+const dayTasks=d=>S.tasks.filter(t=>t.date===d);
+const dayEntries=d=>S.journal.filter(j=>j.date===d);
+function habitStreak(h){let d=today(),n=0;if(val(d,h.id)<h.goal)d=addDays(d,-1);while(val(d,h.id)>=h.goal&&n<3650){n++;d=addDays(d,-1);}return n;}
+function active(d){return dayTasks(d).some(t=>t.done)||S.habits.some(h=>val(d,h.id)>0)||dayEntries(d).length>0;}
+function activeStreak(){let d=today(),n=0;if(!active(d))d=addDays(d,-1);while(active(d)&&n<3650){n++;d=addDays(d,-1);}return n;}
+const last7=()=>Array.from({length:7},(_,i)=>addDays(today(),i-6));
+
+function suggestions(){
+ const out=[],t=today(),tasks=dayTasks(t);
+ if(!(S.tasks.length||Object.keys(S.logs).length||S.journal.length))return ['Welcome! Start small: add one task or log a glass of water to begin your first streak.'];
+ const pri=tasks.filter(x=>x.priority);
+ if(pri.length<3)out.push(`You have ${pri.length}/3 priorities set today. Pick ${3-pri.length} more to keep your focus clear.`);
+ else if(pri.every(x=>x.done))out.push('All three priorities done – brilliant! Enjoy a well-earned break.');
+ else out.push(`${pri.filter(x=>!x.done).length} priority task(s) left today. Tackle the easiest one first for momentum.`);
+ const wk=last7();
+ S.habits.forEach(h=>{
+  const streak=habitStreak(h);
+  if(streak>=3)out.push(`${h.icon} ${h.name}: ${streak}-day streak! Keep it going.`);
+  else if(h.id==='water'&&val(t,h.id)===0)out.push('💧 No water logged yet today – start with a glass now.');
+  else if(h.id==='sleep'){const v=wk.filter(d=>val(d,'sleep')>0).map(d=>val(d,'sleep'));if(v.length&&v.reduce((a,b)=>a+b,0)/v.length<h.goal-1)out.push('😴 Your sleep is below goal this week. Try winding down 30 minutes earlier tonight.');}
+  else if(h.id==='walk'&&!wk.some(d=>val(d,h.id)>=h.goal))out.push('🚶 A 10-minute walk counts – a short stroll is a great reset.');
+ });
+ const moods=wk.flatMap(d=>dayEntries(d)).map(j=>j.mood);
+ if(moods.length>=2){const avg=moods.reduce((a,b)=>a+b,0)/moods.length;
+  if(avg<3)out.push('💜 It has been a tougher week. Be kind to yourself – rest, movement and chatting with a friend can help.');
+  else if(avg>=4)out.push('😄 Your mood has been great lately. Note what is working in your journal.');}
+ if(!dayEntries(t).length)out.push('📔 A 1-minute journal note can help you notice how your day feels.');
+ return out.slice(0,4);
+}
+const tipsHtml=()=>suggestions().map(s=>`<div class="tip">${esc(s)}</div>`).join('');
+
+function taskHtml(t){
+ if(ui.editTask===t.id)return `<form class="task" data-form="edit-task" data-id="${t.id}"><label class="sr" for="et">Edit task</label><input id="et" type="text" name="title" value="${esc(t.title)}" maxlength="120" required><button class="btn sm" type="submit">Save</button><button class="btn alt sm" type="button" data-act="cancel-edit">Cancel</button></form>`;
+ return `<div class="task ${t.done?'done':''}">
+ <button class="chk" data-act="toggle-task" data-id="${t.id}" aria-pressed="${t.done}" aria-label="Done: ${esc(t.title)}">${t.done?'✓':''}</button>
+ <span class="t">${esc(t.title)}</span>
+ <span class="acts">
+ <button class="btn alt sm" data-act="toggle-pri" data-id="${t.id}" aria-pressed="${t.priority}" aria-label="Priority: ${esc(t.title)}">${t.priority?'★':'☆'}</button>
+ <button class="btn alt sm" data-act="edit-task" data-id="${t.id}" aria-label="Edit ${esc(t.title)}">Edit</button>
+ <button class="btn danger sm" data-act="del-task" data-id="${t.id}" aria-label="Delete ${esc(t.title)}">✕</button></span></div>`;
+}
+function viewToday(){
+ const t=today(),tasks=dayTasks(t),pri=tasks.filter(x=>x.priority),rest=tasks.filter(x=>!x.priority);
+ const done=tasks.filter(x=>x.done).length;
+ const dt=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+ let h=`<h2>Today <span class="muted" style="font-weight:400">· ${esc(dt)}</span></h2>`;
+ h+=`<section class="card" aria-label="Add a task"><form data-form="add-task" class="row">
+ <div class="grow"><label for="nt">New task</label><input id="nt" type="text" name="title" maxlength="120" placeholder="e.g. Call the dentist" required></div>
+ <div style="align-self:end"><button class="btn" type="submit">Add task</button></div></form></section>`;
+ h+=`<section class="card star" aria-labelledby="ph"><h3 id="ph">⭐ Top 3 priorities <span class="badge">${pri.length}/3</span></h3>`;
+ h+=pri.length?pri.map(taskHtml).join(''):`<p class="muted">No priorities yet. Tap ☆ on a task to make it a priority (up to three).</p>`;
+ h+=`</section><section class="card" aria-labelledby="oh"><h3 id="oh">📝 Other tasks</h3>`;
+ h+=rest.length?rest.map(taskHtml).join(''):(tasks.length?'<p class="muted">Nothing else on the list.</p>':`<div class="empty"><div class="big" aria-hidden="true">🌱</div><p>Your day is a blank page. Add your first task above, or try some sample data.</p><button class="btn alt" data-act="sample">Load sample data</button></div>`);
+ h+=`</section>`;
+ if(tasks.length)h+=`<p class="muted">${done} of ${tasks.length} tasks complete today.</p>`;
+ return h+`<section class="card" aria-labelledby="sh"><h3 id="sh">💡 Suggestions</h3>${tipsHtml()}</section>`;
+}
+function habitCard(h){
+ const t=today(),v=val(t,h.id),p=Math.round(habitPct(t,h)*100),st=habitStreak(h);
+ const g=ui.editGoal===h.id?`<form class="row" data-form="goal" data-id="${h.id}"><div class="grow"><label for="g-${h.id}">Daily goal (${esc(h.unit)})</label><input id="g-${h.id}" type="number" name="goal" min="0.5" step="0.5" value="${h.goal}" required></div><button class="btn sm" type="submit">Save</button><button class="btn alt sm" type="button" data-act="cancel-goal">Cancel</button></form>`
+ :`<div class="row"><button class="btn alt sm" data-act="edit-goal" data-id="${h.id}" aria-label="Change ${esc(h.name)} goal">Goal: ${h.goal} ${esc(h.unit)} ✎</button>${h.builtin?'':`<button class="btn danger sm" data-act="del-habit" data-id="${h.id}" aria-label="Delete habit ${esc(h.name)}">Delete</button>`}</div>`;
+ return `<article class="card habit"><div class="head"><h3 style="margin:0">${h.icon} ${esc(h.name)}</h3><span class="badge">🔥 ${st} day${st===1?'':'s'}</span></div>
+ <div class="stepper"><button class="btn" data-act="dec" data-id="${h.id}" aria-label="Decrease ${esc(h.name)}">−</button><output aria-live="polite">${v} ${esc(h.unit)}</output><button class="btn" data-act="inc" data-id="${h.id}" aria-label="Increase ${esc(h.name)}">+</button></div>
+ <div class="bar" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(h.name)} progress"><i style="width:${p}%;background:${h.color}"></i></div>
+ <p class="muted" style="margin:6px 0 10px">${p>=100?'🎉 Goal reached!':p+'% of today’s goal'}</p>${g}</article>`;
+}
+function viewHabits(){
+ let h=`<h2>Habits</h2><p class="muted">Tap + and − to log today. Goals are adjustable.</p><div class="grid2">${S.habits.map(habitCard).join('')}</div>`;
+ if(!S.habits.length)h+=`<div class="card empty"><div class="big" aria-hidden="true">🎯</div><p>No habits yet. Add one below or restore the defaults.</p><button class="btn alt" data-act="restore-habits">Restore default habits</button></div>`;
+ h+=`<section class="card" aria-labelledby="ch"><h3 id="ch">➕ Custom habit</h3>`;
+ if(ui.showHabitForm)h+=`<form data-form="add-habit"><div class="row"><div class="grow"><label for="hn">Name</label><input id="hn" type="text" name="name" maxlength="30" placeholder="e.g. Meditation" required></div>
+ <div class="grow"><label for="hu">Unit</label><input id="hu" type="text" name="unit" maxlength="15" placeholder="min, times…" value="times" required></div>
+ <div class="grow"><label for="hg">Daily goal</label><input id="hg" type="number" name="goal" min="0.5" step="0.5" value="1" required></div></div>
+ <div class="row" style="margin-top:10px"><button class="btn" type="submit">Add habit</button><button class="btn alt" type="button" data-act="hide-habit-form">Cancel</button></div></form>`;
+ else h+=`<button class="btn" data-act="show-habit-form">Create a habit</button>`;
+ return h+'</section>';
+}
+function viewJournal(){
+ let h=`<h2>Mood journal</h2><section class="card" aria-labelledby="mh"><h3 id="mh">How are you feeling?</h3>
+ <form data-form="journal"><div class="moods" role="group" aria-label="Mood">${MOODS.map(m=>`<button type="button" data-act="mood" data-k="${m.k}" aria-pressed="${ui.mood===m.k}"><span aria-hidden="true">${m.e}</span><small>${m.n}</small></button>`).join('')}</div>
+ <label for="jn" style="margin-top:12px">Private note (optional)</label><textarea id="jn" name="note" maxlength="1000" placeholder="What’s on your mind?">${esc(ui.note)}</textarea>
+ <p class="muted" style="margin:4px 0 10px">🔒 Stored only on this device. Nothing is uploaded.</p><button class="btn" type="submit">Save entry</button></form></section>`;
+ const list=[...S.journal].sort((a,b)=>b.ts-a.ts);
+ h+=`<section class="card" aria-labelledby="eh"><h3 id="eh">Past entries</h3>`;
+ h+=list.length?list.map(j=>{const m=MOODS.find(x=>x.k===j.mood)||MOODS[2];return `<div class="entry"><div class="row" style="justify-content:space-between"><strong><span aria-hidden="true">${m.e}</span> ${m.n}</strong><span class="muted">${new Date(j.ts).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})}</span></div>${j.note?`<p>${esc(j.note)}</p>`:''}<button class="btn danger sm" data-act="del-entry" data-id="${j.id}" aria-label="Delete entry from ${j.date}">Delete</button></div>`}).join(''):`<div class="empty"><div class="big" aria-hidden="true">📔</div><p>No entries yet. Pick a mood above to start your journal.</p></div>`;
+ return h+'</section>';
+}
+function barChart(title,days,fn,max,color,fmt){
+ const W=320,H=170,bw=28,gap=(W-7*bw)/8;
+ const bars=days.map((d,i)=>{const v=fn(d),x=gap+i*(bw+gap),hh=max?Math.round(v/max*100):0;
+  return `<rect x="${x}" y="${130-hh}" width="${bw}" height="${hh}" rx="6" fill="${color}"/><text x="${x+bw/2}" y="${124-hh}" text-anchor="middle">${fmt(v)}</text><text x="${x+bw/2}" y="150" text-anchor="middle">${dayName(d)}</text>`}).join('');
+ const sum=days.map(d=>dayName(d)+' '+fmt(fn(d))).join(', ');
+ return `<figure style="margin:0"><figcaption><h3>${title}</h3></figcaption><svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}: ${sum}"><line x1="0" y1="130" x2="${W}" y2="130" stroke="#b9b2e6"/>${bars}</svg></figure>`;
+}
+function achievements(){
+ const allDays=[...new Set([...S.tasks.map(t=>t.date),...Object.keys(S.logs)])];
+ const maxStreak=Math.max(0,...S.habits.map(habitStreak));
+ return [
+ ['✅','First step','Complete a task',S.tasks.some(t=>t.done)],
+ ['⭐','Triple focus','Finish 3 priorities in a day',allDays.some(d=>dayTasks(d).filter(t=>t.priority&&t.done).length>=3)],
+ ['💧','Hydrated','Reach your water goal',allDays.some(d=>S.habits.some(h=>h.id==='water'&&val(d,h.id)>=h.goal))],
+ ['🔥','On a roll','3-day streak on any habit',maxStreak>=3],
+ ['🏆','Week warrior','7-day streak on any habit',maxStreak>=7],
+ ['🌈','All-rounder','Hit every habit goal in one day',S.habits.length>0&&allDays.some(d=>S.habits.every(h=>val(d,h.id)>=h.goal))],
+ ['📔','Reflective','Write 3 journal entries',S.journal.length>=3]];
+}
+function viewProgress(){
+ const wk=last7(),done=d=>dayTasks(d).filter(t=>t.done).length,tc=wk.reduce((a,d)=>a+done(d),0);
+ const avg=Math.round(wk.reduce((a,d)=>a+dayHabitPct(d),0)/7*100);
+ let h=`<h2>Weekly progress</h2>`;
+ if(!(S.tasks.length||Object.keys(S.logs).length||S.journal.length))h+=`<div class="card empty"><div class="big" aria-hidden="true">📊</div><p>Charts appear once you log tasks, habits or moods. Want to see how it looks?</p><button class="btn alt" data-act="sample">Load sample data</button></div>`;
+ h+=`<section class="card"><div class="stats"><div class="stat"><b>${tc}</b>tasks done</div><div class="stat"><b>${avg}%</b>habit goals</div><div class="stat"><b>🔥 ${activeStreak()}</b>active-day streak</div></div></section>`;
+ h+=`<div class="grid2"><section class="card">${barChart('Tasks completed',wk,done,Math.max(3,...wk.map(done)),'#6c4cf1',v=>v)}</section>
+ <section class="card">${barChart('Habit goals met (%)',wk,d=>Math.round(dayHabitPct(d)*100),100,'#0e9f8e',v=>v)}</section></div>`;
+ const mood=d=>{const e=dayEntries(d);return e.length?Math.round(e.reduce((a,j)=>a+j.mood,0)/e.length*10)/10:0;};
+ h+=`<section class="card">${barChart('Average mood (1–5)',wk,mood,5,'#c2255c',v=>v||'–')}</section>`;
+ h+=`<section class="card"><h3>🔥 Habit streaks</h3>${S.habits.length?S.habits.map(x=>{const s=habitStreak(x);return `<div class="row" style="justify-content:space-between;padding:4px 0"><span>${x.icon} ${esc(x.name)}</span><span class="badge">${s} day${s===1?'':'s'}</span></div>`}).join(''):'<p class="muted">No habits to track.</p>'}</section>`;
+ const A=achievements();
+ h+=`<section class="card"><h3>🏅 Achievements <span class="badge">${A.filter(a=>a[3]).length}/${A.length}</span></h3><div class="ach">${A.map(a=>`<div class="${a[3]?'on':''}"><span aria-hidden="true">${a[0]}</span> <strong>${a[1]}</strong><br><small>${a[2]} — ${a[3]?'Unlocked':'Locked'}</small></div>`).join('')}</div></section>`;
+ h+=`<section class="card"><h3>💡 Suggestions</h3>${tipsHtml()}</section>`;
+ h+=`<section class="card"><h3>🗂️ Your data</h3><p class="muted">Saved only in this browser.</p><div class="row"><button class="btn alt" data-act="sample">Load sample data</button>`;
+ h+=ui.confirmClear?`<button class="btn danger" data-act="clear-yes">Yes, delete everything</button><button class="btn alt" data-act="clear-no">Keep my data</button>`:`<button class="btn danger" data-act="clear">Clear all data</button>`;
+ return h+`</div></section>`;
+}
+function render(focusSel){
+ document.querySelectorAll('nav.tabs button').forEach(b=>{if(b.dataset.tab===tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+ document.getElementById('app').innerHTML={today:viewToday,habits:viewHabits,journal:viewJournal,progress:viewProgress}[tab]();
+ if(focusSel){const e=document.querySelector(focusSel);if(e)e.focus();}
+}
+
+function loadSample(){
+ const s=fresh(),t=today();
+ s.tasks=[
+  {id:uid(),title:'Plan the week',date:t,done:true,priority:true},
+  {id:uid(),title:'Finish project outline',date:t,done:false,priority:true},
+  {id:uid(),title:'Book a check-up',date:t,done:false,priority:true},
+  {id:uid(),title:'Buy groceries',date:t,done:false,priority:false},
+  {id:uid(),title:'Tidy desk',date:t,done:true,priority:false}];
+ const notes=['Felt calm after a walk.','Busy day but productive.','A bit tired, early night planned.','Lovely catch-up with a friend.','Slow start, got better.','Great workout!','Relaxed and happy.'];
+ for(let i=0;i<7;i++){const d=addDays(t,-i);s.logs[d]={};
+  const f=i===0?0.6:[1,1,0.9,1,0.7,1][i-1];
+  s.habits.forEach((h,j)=>{s.logs[d][h.id]=Math.round(h.goal*(i>0&&(i+j)%4===0?0.8:f)/h.step)*h.step;});
+  if(i>0)for(let k=0;k<2;k++)s.tasks.push({id:uid(),title:'Past task '+(k+1),date:d,done:(i+k)%3!==0,priority:k===0});
+  s.journal.push({id:uid(),date:d,ts:new Date(d+'T12:00:00').getTime(),mood:[4,3,5,4,2,5,4][i],note:notes[i]});}
+ s.sample=true;S=s;ui.editTask=null;ui.editGoal=null;save();
+}
+
+document.querySelector('nav.tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.tab;history.replaceState(null,'','#'+tab);render();window.scrollTo(0,0);});
+const app=document.getElementById('app');
+app.addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');if(!b)return;
+ const a=b.dataset.act,id=b.dataset.id,task=S.tasks.find(t=>t.id===id),hab=S.habits.find(h=>h.id===id);
+ let focus=null;
+ switch(a){
+ case 'toggle-task':task.done=!task.done;focus=`[data-act=toggle-task][data-id="${id}"]`;break;
+ case 'toggle-pri':
+  if(!task.priority&&dayTasks(task.date).filter(t=>t.priority).length>=3){toast('You can have up to 3 priorities per day.');return;}
+  task.priority=!task.priority;focus=`[data-act=toggle-pri][data-id="${id}"]`;break;
+ case 'edit-task':ui.editTask=id;focus='#et';break;
+ case 'cancel-edit':ui.editTask=null;break;
+ case 'del-task':S.tasks=S.tasks.filter(t=>t.id!==id);toast('Task deleted');break;
+ case 'inc':case 'dec':{const L=S.logs[today()]=S.logs[today()]||{};const v=(L[id]||0)+(a==='inc'?hab.step:-hab.step);L[id]=Math.max(0,Math.round(v*100)/100);focus=`[data-act=${a}][data-id="${id}"]`;break;}
+ case 'edit-goal':ui.editGoal=id;focus=`#g-${id}`;break;
+ case 'cancel-goal':ui.editGoal=null;break;
+ case 'del-habit':S.habits=S.habits.filter(h=>h.id!==id);toast('Habit deleted');break;
+ case 'restore-habits':S.habits=DEFAULT_HABITS();break;
+ case 'show-habit-form':ui.showHabitForm=true;focus='#hn';break;
+ case 'hide-habit-form':ui.showHabitForm=false;break;
+ case 'mood':{const n=document.getElementById('jn');ui.note=n?n.value:'';ui.mood=ui.mood===+b.dataset.k?null:+b.dataset.k;focus=`[data-act=mood][data-k="${b.dataset.k}"]`;break;}
+ case 'del-entry':S.journal=S.journal.filter(j=>j.id!==id);toast('Entry deleted');break;
+ case 'sample':loadSample();toast('Sample data loaded');break;
+ case 'clear':ui.confirmClear=true;focus='[data-act=clear-no]';break;
+ case 'clear-no':ui.confirmClear=false;break;
+ case 'clear-yes':S=fresh();ui.confirmClear=false;toast('All data cleared');break;
+ }
+ save();render(focus);
+});
+app.addEventListener('submit',e=>{
+ e.preventDefault();const f=e.target,k=f.dataset.form,fd=new FormData(f);
+ if(k==='add-task'){const title=fd.get('title').trim();if(!title)return;S.tasks.push({id:uid(),title,date:today(),done:false,priority:false});save();render('#nt');}
+ else if(k==='edit-task'){const title=fd.get('title').trim();if(title)S.tasks.find(t=>t.id===f.dataset.id).title=title;ui.editTask=null;save();render(`[data-act=edit-task][data-id="${f.dataset.id}"]`);}
+ else if(k==='goal'){const g=parseFloat(fd.get('goal'));if(!(g>0)){toast('Enter a goal above 0.');return;}S.habits.find(h=>h.id===f.dataset.id).goal=g;ui.editGoal=null;save();render(`[data-act=edit-goal][data-id="${f.dataset.id}"]`);}
+ else if(k==='add-habit'){const name=fd.get('name').trim(),unit=fd.get('unit').trim(),goal=parseFloat(fd.get('goal'));if(!name||!unit||!(goal>0)){toast('Please fill in every field.');return;}
+  S.habits.push({id:'c'+uid(),name,unit,goal,icon:'⭐',step:goal>=20?5:goal>=5?1:goal%1?0.5:1,color:COLORS[S.habits.length%COLORS.length]});ui.showHabitForm=false;save();render();toast('Habit added');}
+ else if(k==='journal'){if(!ui.mood){toast('Please choose a mood first.');return;}
+  S.journal.push({id:uid(),date:today(),ts:Date.now(),mood:ui.mood,note:fd.get('note').trim()});ui.mood=null;ui.note='';save();render();toast('Entry saved');}
+});
+render();
+})();
+</script>
+</body>
+</html>
