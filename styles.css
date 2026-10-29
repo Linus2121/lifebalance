@@ -89,7 +89,7 @@ svg text{font:12px system-ui,sans-serif;fill:#3d3a57}
 footer{text-align:center;padding:14px 10px 90px;color:var(--muted);font-size:.9rem}
 @media(min-width:760px){footer{padding-bottom:20px}}
 .sr{position:absolute;left:-9999px}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:#1f1b3a;color:#fff;padding:8px 8px 8px 18px;border-radius:99px;z-index:40;max-width:94vw;display:flex;align-items:center;gap:10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:#1f1b3a;color:#fff;padding:8px 8px 8px 18px;border-radius:22px;z-index:40;max-width:min(94vw,520px);width:max-content;display:flex;align-items:center;gap:10px}
 .toast button{background:#fff;color:var(--brand-d);border:0;border-radius:99px;min-height:44px;padding:0 16px;font-weight:700;cursor:pointer}
 @media(min-width:760px){.toast{bottom:30px}}
 /* demo banner, alerts */

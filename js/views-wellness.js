@@ -105,7 +105,7 @@
   };
   A.logPlanned = el => {
     const p = LB.S.fitness.plan.find(x => x.id === el.dataset.id); if (!p) return;
-    LB.S.fitness.workouts.push({ id: C.uid(), date: LB.today(), type: p.type, name: p.name, minutes: p.minutes, distanceKm: null, notes: '', exercises: [] }); LB.save(); LB.toast('Logged from your plan.');
+    LB.S.fitness.workouts.push({ id: C.uid(), planId: p.id, date: LB.today(), type: p.type, name: p.name, minutes: p.minutes, distanceKm: null, notes: '', exercises: [] }); LB.save(); LB.toast('Logged from your plan.');
   };
   A.delWorkout = el => LB.remove(() => LB.S.fitness.workouts, el.dataset.id, 'Workout');
   A.delPlan = el => LB.remove(() => LB.S.fitness.plan, el.dataset.id, 'Plan item');

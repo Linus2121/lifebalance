@@ -51,6 +51,22 @@ Costs: `web-push` is free and browsers' push services are free. You pay only for
     cd server; npm test              # push server
     cd tests; npm i; node e2e.js     # browser tests (needs Chrome; mobile + desktop)
 
+## v3 update (last updated 2026-10-29)
+
+Added: clearer Today dashboard (next appointment with countdown, priorities, today's workout/meals, water +/-, one "➕ Add" quick menu), installable PWA (manifest, icons, offline app shell), Settings "Install & this device" card (platform install guidance, feature detection, per-device "receives reminders" toggle), and calendar export (.ics download, Google and Outlook links).
+
+### Verified vs not verified
+| Item | Status |
+|---|---|
+| Today dashboard, quick add, install card, device toggle, .ics export, offline reload, in-app alert/snooze/dismiss | Automated tests (Chrome on Windows, 375px and 1280px) |
+| Push scheduler logic | Server tests with a fake sender |
+| Real closed-app push on Android, iOS/iPadOS, Windows, macOS, Linux | **Not tested** |
+| Safari, Firefox, Edge | **Not tested** |
+| Accounts, cross-device sync, automatic backups, conflict handling, offline sync queue | **Not built** (manual export/import only) |
+| Ingredient quantities / portion-based shopping lists | **Not built** |
+| Fitness log form hidden behind a button | Not done |
+| Apple Calendar | .ics download only |
+
 ## Known limitations
 
 - Closed-app push is covered by server tests and a mocked client; it has **not** been verified end to end with a real push service or device.

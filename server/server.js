@@ -7,7 +7,7 @@ const webpush = require('web-push');
 const LATE_LIMIT_MS = 60 * 60000, MAX_ITEMS = 500, MAX_ATTEMPTS = 5, MAX_DEVICES = 2000, MAX_BODY = 512 * 1024;
 const sha = s => crypto.createHash('sha256').update(s).digest('hex');
 const safeEq = (a, b) => { const x = Buffer.from(a), y = Buffer.from(b); return x.length === y.length && crypto.timingSafeEqual(x, y); };
-const STATIC = { 'index.html': 'text/html; charset=utf-8', 'styles.css': 'text/css', 'sw.js': 'text/javascript', 'logo.png': 'image/png' };
+const STATIC = { 'index.html': 'text/html; charset=utf-8', 'styles.css': 'text/css', 'sw.js': 'text/javascript', 'logo.png': 'image/png', 'manifest.webmanifest': 'application/manifest+json', 'icons/icon-192.png': 'image/png', 'icons/icon-512.png': 'image/png' };
 
 function loadVapid(dir, env) {
   if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) return { publicKey: env.VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY };

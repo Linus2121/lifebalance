@@ -9,6 +9,57 @@
   const permText = p => ({ granted: 'Allowed', denied: 'Blocked in your browser settings', default: 'Not asked yet', unsupported: 'Not supported in this browser' }[p] || p);
   const when = ms => ms ? new Date(ms).toLocaleString() : '';
 
+  let installEvt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (LB.ui.view === 'settings') LB.render(); });
+  window.addEventListener('appinstalled', () => { installEvt = null; LB.toast('LifeBalance installed.'); });
+
+  LB.platform = () => {
+    const ua = navigator.userAgent || '', touchMac = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+    const os = /iPhone|iPad|iPod/.test(ua) || touchMac ? 'ios' : /Android/.test(ua) ? 'android' : /Windows/.test(ua) ? 'windows' : /Mac/.test(ua) ? 'mac' : /Linux|X11|CrOS/.test(ua) ? 'linux' : 'other';
+    const browser = /Edg\//.test(ua) ? 'Edge' : /Firefox|FxiOS/.test(ua) ? 'Firefox' : /Chrome|CriOS/.test(ua) ? 'Chrome' : /Safari/.test(ua) ? 'Safari' : 'your browser';
+    const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+    return { os, browser, standalone };
+  };
+  function installSteps(p) {
+    if (p.standalone) return 'LifeBalance is running as an installed app.';
+    if (p.os === 'ios') return 'In Safari, tap Share, then “Add to Home Screen”. On iPhone and iPad, push reminders work only from the Home Screen app (iOS/iPadOS 16.4 or later). You can also keep using it in the browser.';
+    if (p.os === 'android') return p.browser === 'Firefox' ? 'In Firefox, open the menu and choose “Install”. You can also keep using the browser.' : 'In Chrome or Edge, open the menu and choose “Install app” or “Add to Home screen”.';
+    if (p.browser === 'Safari') return 'In Safari on Mac, choose File → Add to Dock (macOS Sonoma or later). You can also keep using the browser.';
+    if (p.browser === 'Firefox') return 'Desktop Firefox cannot install web apps. Keep using LifeBalance in a browser tab, or use Chrome or Edge to install it.';
+    return 'Look for the install icon in the address bar, or open the browser menu and choose “Install LifeBalance”. You can also keep using the browser.';
+  }
+  function installCard(sp, D) {
+    const p = LB.platform(), yes = '✅', no = '⚠️', recv = D.receive !== false;
+    const feat = [['Works offline after first load', sp.sw && sp.secure], ['Browser notifications', sp.notif], ['Closed-app push (needs reminder server)', sp.push && sp.sw && sp.secure]];
+    return `<section class="card" aria-labelledby="inH"><h2 id="inH">📲 Install &amp; this device</h2>
+      <p class="small">${esc(installSteps(p))}</p>
+      ${installEvt ? '<button type="button" class="btn" data-a="installApp">Install LifeBalance</button>' : ''}
+      <ul class="small">${feat.map(f => `<li>${f[1] ? yes : no} ${esc(f[0])}: ${f[1] ? 'available' : 'not available here'}</li>`).join('')}</ul>
+      ${!sp.secure ? '<p class="note">This page is not secure (HTTPS or localhost is required for install, offline use and push). Your data still works in the browser; use “Export to calendar” for appointments.</p>' : ''}
+      <label class="check"><input type="checkbox" data-c="receive" ${recv ? 'checked' : ''}> This device receives reminders</label>
+      <p class="muted small">Turn this off on devices where you do not want alerts. It only affects this device. If several devices alert you at once, each device shows one alert per reminder (repeat alerts for the same reminder replace each other).</p>
+      <div class="row"><button type="button" class="btn alt" data-a="exportIcs">Export all upcoming events (.ics)</button></div>
+      <p class="muted small">Opens in Google Calendar, Outlook or Apple Calendar. Recurring events are exported for the next 12 months. The file contains your appointment details.</p></section>`;
+  }
+  A.installApp = async () => { if (!installEvt) return false; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) { /* ignore */ } installEvt = null; LB.render(); return false; };
+  LB.changes.receive = el => { LB.D.receive = el.checked; LB.saveD(); LB.rem.syncSoon(); LB.toast(el.checked ? 'This device will receive reminders.' : 'This device will not receive reminders.'); return 'none'; };
+  LB.download = (name, type, text) => {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  A.exportIcs = () => {
+    const t = LB.today(), occ = C.allOccurrences(LB.personal, t, C.addDays(t, 365)).filter(o => !o.cancelled);
+    if (!occ.length) { LB.toast('No upcoming appointments to export.'); return false; }
+    LB.download('lifebalance-events.ics', 'text/calendar', LBCal.build(C, occ, Date.now())); LB.toast(occ.length + ' event' + (occ.length === 1 ? '' : 's') + ' exported.'); return false;
+  };
+  A.calMenu = async el => {
+    const o = C.allOccurrences(LB.S, C.addDays(LB.today(), -400), C.addDays(LB.today(), 800)).find(x => x.evId === el.dataset.id && x.key === el.dataset.key); if (!o) return false;
+    const v = await LB.ask({ title: 'Add to calendar', body: '<p class="small muted">This shares the appointment details with the calendar you choose.</p>', buttons: [{ label: 'Download .ics (Apple, Outlook, Google)', value: 'ics' }, { label: 'Google Calendar', value: 'g' }, { label: 'Outlook.com', value: 'o' }, { label: 'Cancel', value: null, cls: 'alt' }] });
+    if (v === 'ics') LB.download('appointment.ics', 'text/calendar', LBCal.build(C, [o], Date.now()));
+    else if (v === 'g') window.open(LBCal.googleUrl(C, o), '_blank', 'noopener');
+    else if (v === 'o') window.open(LBCal.outlookUrl(C, o), '_blank', 'noopener');
+    return false;
+  };
+
   V.settings = function () {
     const S = LB.personal, rem = LB.rem, sp = rem.supported(), perm = rem.perm(), P = D.push;
     let h = `<div class="row between"><h2 id="setH" tabindex="-1" style="margin:0">⚙️ Settings</h2><button type="button" class="btn alt sm" data-a="closeSettings">← Back</button></div>`;
@@ -29,6 +80,8 @@
       <label for="srv">Reminder server address (leave blank if the server hosts this app)</label><input type="url" id="srv" value="${esc(D.serverUrl)}" data-i="serverUrl" placeholder="https://your-server.example.com" inputmode="url">
       <div class="row">${P.enabled ? '<button type="button" class="btn alt" data-a="retryPush">Retry sync</button><button type="button" class="btn danger" data-a="disablePush">Turn off closed-app delivery</button>' : '<button type="button" class="btn" data-a="enablePush">Turn on closed-app delivery</button>'}</div>
       <p class="muted small">Limitations: needs HTTPS (or localhost), a notification permission and an always-on server. The server stores only reminder times and short text (generic by default) tied to a random device token. Snoozing works only while the app is open. iPhone and iPad need the app added to the Home Screen. Reminders more than 45 days ahead are sent to the server when you next open the app.</p></details></section>`;
+
+    h += installCard(sp, D);
 
     h += `<section class="card" aria-labelledby="pvH"><h2 id="pvH">🔒 Privacy</h2><form data-s="savePrivacy">
       <label class="check"><input type="checkbox" name="sd" ${S.settings.showDetails ? 'checked' : ''}> Show appointment, workout and meal details in notification previews</label>

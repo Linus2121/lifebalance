@@ -332,7 +332,7 @@
     S.fitness.goals = { weeklyWorkouts: numOr(g.weeklyWorkouts, 3, 0, 21) | 0, weeklyMinutes: numOr(g.weeklyMinutes, 150, 0, 10080) | 0, trackWeight: !!g.trackWeight, targetWeightKg: numOr(g.targetWeightKg, null, 20, 500) };
     S.fitness.plan = list(f.plan, warn, p => isObj(p) && Object.keys(WORKOUT_TYPES).includes(p.type) && [0, 1, 2, 3, 4, 5, 6].includes(+p.day) ? { id: idOr(p.id), day: +p.day, type: p.type, name: str(p.name, 60), minutes: numOr(p.minutes, 0, 0, 1440), time: p.time === '' || isTime(p.time) ? p.time : '' } : null);
     S.fitness.workouts = list(f.workouts, warn, w => isObj(w) && isDate(w.date) && Object.keys(WORKOUT_TYPES).includes(w.type) ? {
-      id: idOr(w.id), date: w.date, type: w.type, name: str(w.name, 60), minutes: numOr(w.minutes, 0, 0, 1440), distanceKm: numOr(w.distanceKm, null, 0, 1000), notes: str(w.notes, 500),
+      id: idOr(w.id), planId: str(w.planId, 64), date: w.date, type: w.type, name: str(w.name, 60), minutes: numOr(w.minutes, 0, 0, 1440), distanceKm: numOr(w.distanceKm, null, 0, 1000), notes: str(w.notes, 500),
       exercises: list(w.exercises, { n: 0 }, x => isObj(x) && str(x.name) ? { name: str(x.name, 60), sets: numOr(x.sets, null, 0, 100), reps: numOr(x.reps, null, 0, 1000), weightKg: numOr(x.weightKg, null, 0, 1000) } : null).slice(0, 30)
     } : null);
     S.fitness.weights = list(f.weights, warn, w => isObj(w) && isDate(w.date) && numOr(w.kg, null, 20, 500) !== null ? { id: idOr(w.id), date: w.date, kg: +w.kg } : null);

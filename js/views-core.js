@@ -69,6 +69,22 @@
     LB.ui.focus = pri ? '#priTitle' : '#taskTitle';
   };
 
+  function countdown(ms) {
+    if (ms <= 0) return 'Happening now';
+    const m = Math.round(ms / 6e4); if (m < 60) return 'Starts in ' + m + ' minute' + (m === 1 ? '' : 's');
+    const hr = Math.floor(m / 60); if (hr < 24) return 'Starts in ' + hr + ' hour' + (hr === 1 ? '' : 's') + (m % 60 ? ' ' + (m % 60) + ' min' : '');
+    const d = Math.round(ms / 864e5); return 'Starts in ' + d + ' day' + (d === 1 ? '' : 's');
+  }
+  A.quickAdd = async () => {
+    const v = await LB.ask({ title: 'Add…', body: '<p class="small muted">What would you like to add?</p>', buttons: [
+      { label: '📅 Appointment', value: 'event' }, { label: '💪 Log workout', value: 'workout' }, { label: '🍽️ Add meal', value: 'meal' }, { label: '📝 Task', value: 'task' }, { label: 'Cancel', value: null, cls: 'alt' }] });
+    if (v === 'event') { LB.actions.newEvent(); LB.ui.tab = 'events'; LB.render(true); }
+    else if (v === 'workout') { LB.ui.wtab = 'fitness'; LB.ui.focus = '#wk-type'; LB.go('wellness'); }
+    else if (v === 'meal') { LB.ui.wtab = 'food'; LB.ui.ftab = 'diary'; LB.ui.focus = '#fd-name'; LB.go('wellness'); }
+    else if (v === 'task') { LB.ui.focus = '#taskTitle'; LB.render(); }
+    return false;
+  };
+
   V.today = function () {
     const S = LB.S, t = LB.today(), todays = C.dayTasks(S, t), pri = todays.filter(x => x.priority), other = todays.filter(x => !x.priority);
     const over = C.overdueTasks(S, t), hp = C.dayHabitPct(S, t), w = water();
@@ -76,7 +92,12 @@
     const wk = S.fitness.workouts.filter(x => x.date === t), meals = S.food.diary[t] || [];
     const hist = [...new Set(S.tasks.filter(x => x.date < t).map(x => x.date))].sort().reverse().slice(0, 30);
     let h = `<h2>${LB.fmtDate(t, true)}</h2>`;
-    h += `<button type="button" class="btn big" data-a="newEvent" style="margin-bottom:14px">➕ Add appointment</button>`;
+    h += `<button type="button" class="btn big" data-a="quickAdd" aria-haspopup="dialog" style="margin-bottom:14px">➕ Add</button>`;
+    h += `<p class="small muted" id="remNote" role="status">🔔 ${esc(LB.rem && LB.rem.deliveryNote ? LB.rem.deliveryNote() : '')} <button type="button" class="btn alt sm" data-a="openSettings">Reminder settings</button></p>`;
+    const nowMs = Date.now(), nxt = C.allOccurrences(S, t, C.addDays(t, 120)).filter(o => !o.cancelled && C.startInstant(o) > nowMs - 36e5).sort((a, b) => C.startInstant(a) - C.startInstant(b))[0];
+    h += `<section class="card star" aria-labelledby="nxH"><h2 id="nxH">📅 Next appointment</h2>`;
+    h += nxt ? LB.occRow(nxt, { compact: true }) + `<p class="small muted">${esc(countdown(C.startInstant(nxt) - nowMs))}</p>` : LB.empty('📅', 'No appointments coming up', 'Add one and choose reminders so you never miss it.', '<button type="button" class="btn" data-a="newEvent">Add appointment</button>');
+    h += '</section>';
     if (over.length) h += `<section class="card" aria-labelledby="ovH"><h2 id="ovH">⏰ Overdue tasks <span class="badge warn">${over.length}</span></h2>${over.map(x => taskRow(x, { move: true, showDate: true })).join('')}</section>`;
     h += tipsHtml();
     h += `<div class="grid2"><section class="card star" aria-labelledby="priH"><h2 id="priH">⭐ Top 3 priorities <span class="badge">${pri.length}/3</span></h2>`;
@@ -87,6 +108,13 @@
     h += `<form class="task" data-s="addTask"><label class="sr" for="taskTitle">New task</label><input type="text" id="taskTitle" name="title" placeholder="Add a task" maxlength="120" required><button class="btn">Add</button></form></section></div>`;
     h += `<section class="card" aria-labelledby="upH"><h2 id="upH">📅 Upcoming appointments</h2>`;
     h += up.length ? up.map(o => LB.occRow(o, { compact: true })).join('') + `<button type="button" class="btn alt sm" data-a="go" data-arg="events">See all events</button>` : LB.empty('📅', 'No appointments this week', 'Add one and set reminders so you never miss it.', '<button type="button" class="btn" data-a="newEvent">Add appointment</button>');
+    const planned = S.fitness.plan.filter(p => p.day === C.dayOfWeek(t)), mp = S.food.plan[t] || {}, M = window.LBMeals, byId = id => M && M.LIB.concat(S.food.custom).find(x => x.id === id);
+    const doneTypes = null, wc = w && C.habitActive(w, t);
+    h += `</section><section class="card" aria-labelledby="tdH"><h2 id="tdH">🗓️ Today's plan</h2>`;
+    h += planned.length ? planned.map(p => `<div class="task"><span class="t">${esc(p.name || p.type)}${p.minutes ? ' · ' + p.minutes + ' min' : ''}${p.time ? ' · ' + esc(p.time) : ''}</span><span class="acts">${wk.some(x => x.planId === p.id) ? '<span class="badge ok">Done</span>' : `<button type="button" class="btn sm" data-a="logPlanned" data-id="${p.id}">Mark done</button>`}</span></div>`).join('') : '<p class="muted small">No workout planned today. <button type="button" class="btn alt sm" data-a="goWellness" data-arg="fitness">Plan one</button></p>';
+    const ml = Object.keys(mp).map(s => { const m = byId(mp[s]); return m ? `<li><b>${esc(s)}</b>: ${esc(m.name)}</li>` : ''; }).join('');
+    h += ml ? `<h3>Planned meals</h3><ul class="small">${ml}</ul>` : '<p class="muted small">No meals planned today. <button type="button" class="btn alt sm" data-a="goWellness" data-arg="food">Plan meals</button></p>';
+    if (wc) h += `<h3>Water</h3><div class="row"><button type="button" class="btn alt" data-a="waterStep" data-key="${t}" data-arg="-1" aria-label="Remove one ${esc(w.unit)} of water">−</button><b aria-live="polite">${LB.num(C.habitValue(S, t, w))} / ${LB.num(C.goalOn(w, t))} ${esc(w.unit)}</b><button type="button" class="btn" data-a="waterStep" data-key="${t}" data-arg="1" aria-label="Add one ${esc(w.unit)} of water">＋</button></div>`;
     h += `</section><section class="card" aria-labelledby="wlH"><h2 id="wlH">💪 Wellness today</h2><div class="stats">
       <div class="stat"><b>${wk.length}</b>workout${wk.length === 1 ? '' : 's'}${wk.length ? ' · ' + wk.reduce((a, x) => a + x.minutes, 0) + ' min' : ''}</div>
       <div class="stat"><b>${meals.length}</b>meal${meals.length === 1 ? '' : 's'} logged</div>

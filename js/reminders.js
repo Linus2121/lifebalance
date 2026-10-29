@@ -34,7 +34,7 @@
   }
   R.check = () => {
     const now = Date.now();
-    if (!LB.D.demo) {
+    if (!LB.D.demo && D.receive !== false) {
       const lookback = D.push.status === 'ok' ? 2 * 60000 : 6 * 3600000, from = Math.max(D.lastCheck || 0, now - lookback);
       C.remindersBetween(LB.personal, from, now, LB.tz).forEach(r => {
         if (D.fired[r.key]) return; D.fired[r.key] = now;
@@ -132,7 +132,7 @@
   };
   R.syncSoon = () => { R.prune(); clearTimeout(syncTimer); if (D.push.enabled && !LB.D.demo) syncTimer = setTimeout(R.sync, 1500); };
   R.buildSchedule = () => {
-    const now = Date.now(), S = LB.personal;
+    const now = Date.now(), S = LB.personal; if (D.receive === false) return [];
     return C.remindersBetween(S, now, now + HORIZON_DAYS * 864e5, LB.tz).slice(0, MAX_ITEMS).map(r => { const t = C.reminderText(r, S.settings.showDetails, LB.tz); return { key: r.key, at: r.at, title: t.title, body: t.body }; });
   };
   R.sync = async () => {

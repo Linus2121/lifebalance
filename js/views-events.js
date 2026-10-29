@@ -24,7 +24,7 @@
       ${!opt.compact && o.notes ? `<div class="small muted">${esc(o.notes)}</div>` : ''}
       ${!opt.compact && o.contact && (o.contact.name || o.contact.phone || o.contact.email) ? `<div class="small">👤 ${esc([o.contact.name, o.contact.phone, o.contact.email].filter(Boolean).join(' · '))}</div>` : ''}
       <div class="row" style="margin-top:6px"><button type="button" class="btn alt sm" data-a="editOcc" ${a} aria-label="Edit ${t}">Edit</button>
-      ${opt.compact ? '' : `<button type="button" class="btn alt sm" data-a="cancelOcc" ${a} aria-label="${o.cancelled ? 'Restore' : 'Cancel'} ${t}">${o.cancelled ? 'Restore' : 'Cancel'}</button><button type="button" class="btn danger sm" data-a="delEvent" ${a} aria-label="Delete ${t}">Delete</button>`}</div></div></div>`;
+      ${opt.compact ? '' : `<button type="button" class="btn alt sm" data-a="calMenu" ${a} aria-label="Add ${t} to calendar">📆 Calendar</button><button type="button" class="btn alt sm" data-a="cancelOcc" ${a} aria-label="${o.cancelled ? 'Restore' : 'Cancel'} ${t}">${o.cancelled ? 'Restore' : 'Cancel'}</button><button type="button" class="btn danger sm" data-a="delEvent" ${a} aria-label="Delete ${t}">Delete</button>`}</div></div></div>`;
   };
 
   /* ---------- list / calendar ---------- */
