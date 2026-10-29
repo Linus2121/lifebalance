@@ -91,8 +91,10 @@
     const up = C.allOccurrences(S, t, C.addDays(t, 7)).filter(o => !o.cancelled).slice(0, 4);
     const wk = S.fitness.workouts.filter(x => x.date === t), meals = S.food.diary[t] || [];
     const hist = [...new Set(S.tasks.filter(x => x.date < t).map(x => x.date))].sort().reverse().slice(0, 30);
-    let h = `<h2>${LB.fmtDate(t, true)}</h2>`;
-    h += `<button type="button" class="btn big" data-a="quickAdd" aria-haspopup="dialog" style="margin-bottom:14px">➕ Add</button>`;
+    const hour = new Date().getHours(), greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    let h = `<div class="welcome"><div><p class="eyebrow">Your day, in balance</p><h2>${greeting}</h2><p>${LB.fmtDate(t, true)}</p></div><button type="button" class="btn" data-a="quickAdd" aria-haspopup="dialog">＋ Add</button></div>`;
+    h += `<section class="card balance" aria-label="Today's habit progress"><div><small>SMALL STEPS. REAL PROGRESS.</small><h2>Daily balance</h2><p>Your habits, at your pace.</p><small>${hp == null ? 'Set a habit goal to get started' : 'Progress towards today’s habit goals'}</small></div><div class="balance-ring" style="--progress:${hp == null ? 0 : LB.pct(hp)}%"><span>${hp == null ? '–' : LB.pct(hp) + '%'}</span></div></section>`;
+
     h += `<p class="small muted" id="remNote" role="status">🔔 ${esc(LB.rem && LB.rem.deliveryNote ? LB.rem.deliveryNote() : '')} <button type="button" class="btn alt sm" data-a="openSettings">Reminder settings</button></p>`;
     const nowMs = Date.now(), nxt = C.allOccurrences(S, t, C.addDays(t, 120)).filter(o => !o.cancelled && C.startInstant(o) > nowMs - 36e5).sort((a, b) => C.startInstant(a) - C.startInstant(b))[0];
     h += `<section class="card star" aria-labelledby="nxH"><h2 id="nxH">📅 Next appointment</h2>`;
