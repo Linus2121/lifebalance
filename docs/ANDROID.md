@@ -45,3 +45,12 @@ A hash-based notification category is created for each distinct custom audio cli
 
 ## Sound-panel visibility update — 2026-10-29
 Version 1.0.3 (code 4) always renders a dedicated Reminder sounds panel directly below the Settings heading. Its visibility no longer depends on matching the reminder limitations paragraph. Custom ringtone, Use device tones, Sound settings and test/enable controls are grouped in this panel, with an Android app 1.0.3 badge. Panel unit tests verify visibility, correct action controls and safe filename escaping. Tablet confirmation is still needed.
+
+## Missed-appointment investigation — 2026-10-29
+User reported an appointment alert missing at 20:40. Cause is not yet confirmed on the tablet. Review found the earlier builds deliberately used inexact alarms, and default appointment offsets are one day and 30 minutes before (no due-time alarm unless At event time is selected).
+
+Version 1.0.4 (code 5) adds optional SCHEDULE_EXACT_ALARM special access (not USE_EXACT_ALARM). Allow precise reminder timing opens Android's permission screen on user request. Reconciliation checks access on each sync/resume and upgrades/downgrades queued alarms accordingly. Granted precise timing uses exact/allow-while-idle scheduling; no grant keeps explicitly labelled inexact alarms. Force-stop, permission revocation, manufacturer restrictions, Do Not Disturb and muted channels can still affect delivery. No guaranteed delivery is claimed.
+
+Settings shows the last successful queue check, number of registered future reminders, the next five registered alert times with the device time zone, a muted-category warning and a shortcut to app notification/battery settings. After scheduling, queued IDs/metadata are read back before success is displayed. This confirms plugin registration, not that Android actually displayed or sounded an alarm. Missing registrations and startup errors are surfaced. A custom-tone query failure falls back to the base reminder category instead of blocking all scheduling. No existing appointment or reminder offsets are silently changed.
+
+Required retest on the tablet: allow notifications and precise timing, create an appointment five minutes ahead with At event time selected, verify that time in Next registered alert times, leave the app on the Home screen and observe. Repeat locked-screen, snooze and edited/cancelled appointments. The reported 20:40 delivery failure remains unverified until these tests run.

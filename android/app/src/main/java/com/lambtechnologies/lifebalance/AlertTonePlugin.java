@@ -169,6 +169,16 @@ public class AlertTonePlugin extends Plugin {
     }
 
     @PluginMethod
+    public void openAppSettings(PluginCall call) {
+        try {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + getContext().getPackageName()));
+            getActivity().startActivity(intent);
+            call.resolve();
+        } catch (Exception error) { call.reject("Could not open app settings", error); }
+    }
+
+    @PluginMethod
     public void choose(PluginCall call) {
         getActivity().runOnUiThread(() -> {
             try {

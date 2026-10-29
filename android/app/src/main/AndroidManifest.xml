@@ -37,8 +37,8 @@
         </provider>
     </application>
 
-    <!-- Inexact scheduling avoids restricted exact-alarm access in this phase. -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
+    <!-- Optional user-approved special access for time-sensitive reminders. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />

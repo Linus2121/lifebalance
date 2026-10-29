@@ -28,9 +28,9 @@ refreshTone();
 const settings=LB.views.settings;
 LB.views.settings=()=>{
  let h=settings();const p=LB.D.nativeRem;
- h=h.replace('</h2>','</h2><span class="badge">Android app 1.0.3</span>');
+ h=h.replace('</h2>','</h2><span class="badge">Android app 1.0.4</span>');
  h=h.replace(/Reminders always appear inside the app while it is open\.[\s\S]*?<\/p>/,'Android schedules reminders on this phone, including when the app is closed. No reminder server is required.</p>');
- h=h.replace(/Limits: closed-app reminders need HTTPS[\s\S]*?<\/details>/,'Limits: the next 45 days (up to 300 alerts) are scheduled. Reopen the app regularly to refresh schedules, especially after time-zone changes. Android battery restrictions, force-stop and notification settings can delay or prevent alerts. Snooze actions open LifeBalance to schedule the next alert. Exact timing is not guaranteed. Real-device delivery has not been verified.</p>');
+ h=h.replace(/Limits: closed-app reminders need HTTPS[\s\S]*?<\/details>/,'Limits: the next 45 days (up to 300 alerts) are scheduled. Reopen the app regularly to refresh schedules, especially after time-zone changes. Android battery restrictions, force-stop and notification settings can delay or prevent alerts. Snooze actions open LifeBalance to schedule the next alert. Use Allow precise reminder timing for exact alarms where Android permits; other device restrictions still apply. Real-device delivery has not been verified.</p>');
  h=h.replace(/<p class="err" role="alert">[\s\S]*?<\/p>/g,m=>m.includes('reminder service')?'':m);
  // Settings uses web push state for its controls; replace just this button group.
  const start=h.indexOf('<div class="row">',h.indexOf('aria-labelledby="ntH"'));
@@ -38,7 +38,7 @@ LB.views.settings=()=>{
  if(start>=0&&end>=0)h=h.slice(0,start)+'<div class="row">'+(p.enabled?'<button class="btn" data-a="testPush">Test native reminder in 15 sec</button><button class="btn alt" data-a="retryPush">Refresh schedule</button><button class="btn danger" data-a="disablePush">Turn off native reminders</button>':'<button class="btn" data-a="enableReminders">Enable native reminders</button>')+'</div>'+h.slice(end+6);
  h=h.replace('Export backup (JSON)' ,'Save or share backup (JSON)');
  h=h.replace('<div class="row"><button type="button" class="btn" data-a="exportData">','<p class="small">Moving from the website? Export a JSON backup in the browser, save it to this phone, then choose Import backup here. Review the record counts before confirming. The browser copy stays unchanged; the app keeps a restore copy before replacement. Backups contain private information.</p><div class="row"><button type="button" class="btn" data-a="exportData">');
- const sounds=soundPanel(LB.esc,toneName,p.enabled);
+ const sounds=soundPanel(LB.esc,toneName,p.enabled,p);
  // Always render the panel, independently of reminder status/help text.
  const headingEnd=h.indexOf('</div>');
  return headingEnd>=0?h.slice(0,headingEnd+6)+sounds+h.slice(headingEnd+6):sounds+h;
