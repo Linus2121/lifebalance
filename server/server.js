@@ -18,9 +18,19 @@ function loadVapid(dir, env) {
   fs.writeFileSync(f, JSON.stringify(k), { mode: 0o600 }); return k;
 }
 
+function makeMailer(env) {
+  if (env.RESEND_API_KEY && env.MAIL_FROM) return async (to, subject, text) => {
+    const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: env.MAIL_FROM, to: [to], subject, text }) });
+    if (!r.ok) throw new Error('mail provider replied ' + r.status);
+  };
+  // Development only: prints codes to the server console. Refused in production.
+  if (env.LB_MAIL_MODE === 'console' && env.NODE_ENV !== 'production') return async (to, subject, text) => console.log('[dev mail] to ' + to + ': ' + text);
+  return null;
+}
+
 function createApp(opts) {
   opts = opts || {};
-  const env = opts.env || process.env, dir = opts.dataDir || path.join(__dirname, 'data'), now = opts.now || Date.now;
+  const env = opts.env || process.env, dir = opts.dataDir || env.LB_DATA_DIR || path.join(__dirname, 'data'), now = opts.now || Date.now;
   const vapid = opts.vapid || loadVapid(dir, env), subject = env.VAPID_SUBJECT || 'mailto:admin@example.com';
   const sender = opts.sender || ((sub, payload) => webpush.sendNotification(sub, payload, { vapidDetails: { subject, publicKey: vapid.publicKey, privateKey: vapid.privateKey }, TTL: 3600, urgency: 'high' }));
   const origins = (env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -28,8 +38,13 @@ function createApp(opts) {
   const dbFile = path.join(dir, 'db.json');
   const masterKey = opts.masterKey || accounts.loadMasterKey(dir, env);
   const acct = accounts.create({ dir, now, masterKey });
+  const mailer = opts.mailer === undefined ? makeMailer(env) : opts.mailer, accountsEnabled = !!mailer;
+  const clientIp = req => {
+    const n = +env.TRUST_PROXY || 0, xf = String(req.headers['x-forwarded-for'] || '').split(',').map(s => s.trim()).filter(Boolean);
+    return (n > 0 && xf.length ? xf[Math.max(0, xf.length - n)] : req.socket.remoteAddress) || '?';
+  };
   const snoozeToken = (devId, key) => crypto.createHmac('sha256', masterKey).update('snooze|' + devId + '|' + key).digest('base64url');
-  const stats = { failures: 0, lastError: '', lastSentAt: 0 };
+  const stats = { failures: 0, lastError: '', lastSentAt: 0, mailFailures: 0 };
   let db = { devices: {} };
   try { db = JSON.parse(fs.readFileSync(dbFile, 'utf8')); if (!db.devices) db.devices = {}; } catch (e) { /* new */ }
   let dirty = false;
@@ -54,6 +69,8 @@ function createApp(opts) {
   // Sends every due reminder once. Gives up after MAX_ATTEMPTS or when more than an hour late.
   async function tick() {
     const t = now();
+    for (const [k, a] of hits) { if (!a.length || a[a.length - 1] < t - 3600000) hits.delete(k); }
+    acct.prune();
     for (const id of Object.keys(db.devices)) {
       const dev = db.devices[id]; if (!dev.subscription) continue;
       for (const it of dev.items) {
@@ -91,9 +108,9 @@ function createApp(opts) {
   }
 
   async function api(req, res, url) {
-    const ip = req.socket.remoteAddress || '?', p = url.pathname, method = req.method;
+    const ip = clientIp(req), p = url.pathname, method = req.method;
     if (limited(ip, 'all', 240, 60000)) return send(res, 429, { error: 'Too many requests' });
-    if (p === '/api/config' && method === 'GET') return send(res, 200, { publicKey: vapid.publicKey, accounts: true, version: 4 });
+    if (p === '/api/config' && method === 'GET') return send(res, 200, { publicKey: vapid.publicKey, accounts: accountsEnabled, version: 4 });
     if (p === '/api/register' && method === 'POST') {
       if (limited(ip, 'reg', 20, 3600000)) return send(res, 429, { error: 'Too many registrations' });
       if (Object.keys(db.devices).length >= MAX_DEVICES) return send(res, 503, { error: 'Server is full' });
@@ -104,16 +121,35 @@ function createApp(opts) {
     const bearer = () => { const m = /^Bearer (.+)$/.exec(req.headers.authorization || ''); return m ? m[1] : ''; };
     const label = r => clip(req.headers['user-agent'] || '', 60);
     /* ----- accounts and sync ----- */
-    if (p === '/api/account/register' || p === '/api/account/login') {
+    if (p === '/api/health' && method === 'GET') {
+      let writable = false; try { fs.mkdirSync(dir, { recursive: true }); const t = path.join(dir, '.health'); fs.writeFileSync(t, String(now())); fs.unlinkSync(t); writable = true; } catch (e) { /* reported below */ }
+      return send(res, writable ? 200 : 503, { ok: writable, version: 4, accounts: { enabled: accountsEnabled, reason: accountsEnabled ? '' : 'email-service-not-configured' }, storage: { writable }, encryptionKey: env.LB_DATA_KEY ? 'environment' : 'file', push: { configured: !!(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) || 'generated-file' }, lastPushFailure: stats.failures ? stats.lastError : '' });
+    }
+    const am = /^\/api\/account\/(register|login|verify|resend|forgot|reset)$/.exec(p);
+    if (am) {
       if (method !== 'POST') return send(res, 405, { error: 'Method not allowed' });
-      const b = await readBody(req);
-      if (limited(ip, 'auth', 20, 15 * 60000) || limited(String(b.email || '').toLowerCase(), 'authm', 10, 15 * 60000)) return send(res, 429, { error: 'Too many attempts. Try again in a few minutes.' });
-      const r = p.endsWith('register') ? await acct.register(b.email, b.password, label()) : await acct.login(b.email, b.password, label());
-      return r.error ? send(res, r.code, { error: r.error }) : send(res, 200, { token: r.token, email: r.email });
+      if (!accountsEnabled) return send(res, 503, { error: 'Accounts are not available on this server yet.', unavailable: true });
+      const b = await readBody(req), k = am[1], em = String(b.email || '').trim().toLowerCase().slice(0, 254), mails = ['register', 'resend', 'forgot'].includes(k);
+      if (limited(ip, 'auth', 30, 15 * 60000) || limited(em, 'authm', 10, 15 * 60000) || (mails && (limited(ip, 'mail', 20, 3600000) || limited(em, 'mailm', 5, 3600000)))) return send(res, 429, { error: 'Too many attempts. Try again in a few minutes.' });
+      const mail = async (to, subject, text) => { try { await mailer(to, subject, text); return true; } catch (e) { stats.mailFailures++; console.error('mail failed:', e.message); return false; } };
+      if (k === 'register') {
+        const r = await acct.register(b.email, b.password, label(), { requireVerification: true }); if (r.error) return send(res, r.code, { error: r.error });
+        if (!(await mail(r.email, 'Your LifeBalance verification code', 'Your LifeBalance code is ' + r.verifyCode + '. It expires in 15 minutes. If you did not create an account, ignore this email.'))) return send(res, 502, { error: 'The account was created but the verification email could not be sent. Use “Resend code” in a few minutes.' });
+        return send(res, 200, { needsVerification: true, email: r.email });
+      }
+      if (k === 'login') { const r = await acct.login(b.email, b.password, label()); return r.error ? send(res, r.code, { error: r.error, unverified: !!r.unverified }) : send(res, 200, { token: r.token, email: r.email }); }
+      if (k === 'verify') { const r = acct.verifyEmail(b.email, b.code, label()); return r.error ? send(res, r.code, { error: r.error }) : send(res, 200, { token: r.token, email: r.email }); }
+      if (k === 'resend') { const r = await acct.resendVerification(b.email, b.password); if (r.verifyCode) await mail(r.email, 'Your LifeBalance verification code', 'Your LifeBalance code is ' + r.verifyCode + '. It expires in 15 minutes.'); return send(res, 200, { ok: true }); }
+      if (k === 'forgot') { const r = acct.forgotPassword(b.email); if (r.resetCode) await mail(r.email, 'LifeBalance password reset code', 'Your LifeBalance password reset code is ' + r.resetCode + '. It expires in 15 minutes. If you did not ask for this, ignore this email: your password has not changed.'); return send(res, 200, { ok: true }); }
+      const r = await acct.resetPassword(b.email, b.code, b.newPassword); return r.error ? send(res, r.code, { error: r.error }) : send(res, 200, { ok: true });
     }
     if (p.startsWith('/api/account') || p === '/api/sync' || p.startsWith('/api/backups')) {
       const user = acct.auth(bearer()); if (!user) return send(res, 401, { error: 'Please sign in again.' });
       if (p === '/api/account' && method === 'GET') return send(res, 200, { email: user.email });
+      if (p === '/api/account/sessions' && method === 'GET') return send(res, 200, { sessions: acct.listSessions(user.id, bearer()) });
+      if (p === '/api/account/sessions/revoke-others' && method === 'POST') return send(res, 200, { revoked: acct.revokeOthers(user.id, bearer()) });
+      const sm = /^\/api\/account\/sessions\/([0-9a-f]{16})$/.exec(p);
+      if (sm && method === 'DELETE') return acct.revokeSession(user.id, sm[1]) ? send(res, 200, { ok: true }) : send(res, 404, { error: 'Session not found' });
       if (p === '/api/account/logout' && method === 'POST') { acct.logout(bearer()); return send(res, 200, { ok: true }); }
       if (p === '/api/account/password' && method === 'POST') {
         const b = await readBody(req); if (limited(ip, 'pw', 10, 15 * 60000)) return send(res, 429, { error: 'Too many attempts.' });
@@ -210,5 +246,7 @@ module.exports = { createApp };
 if (require.main === module) {
   const port = +process.env.PORT || 8787, app = createApp();
   setInterval(() => app.tick().catch(e => console.error('tick failed', e.message)), 10000);
-  app.server.listen(port, () => console.log('LifeBalance reminder server on port ' + port));
+  const stop = () => { try { app.save(); } catch (e) { /* best effort */ } process.exit(0); };
+  process.on('SIGTERM', stop); process.on('SIGINT', stop);
+  app.server.listen(port, '0.0.0.0', () => console.log('LifeBalance server on port ' + port));
 }

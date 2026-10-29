@@ -4,14 +4,19 @@ const { createApp } = require('../server');
 
 const SUB = { endpoint: 'https://push.example.com/abc', keys: { p256dh: 'BPk', auth: 'auth' } };
 async function setup() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lbv4-')), sent = [], fail = { on: false }; let clock = 1_000_000_000_000;
-  const app = createApp({ dataDir: dir, staticDir: null, env: {}, now: () => clock, sender: async (sub, payload) => { if (fail.on) throw new Error('boom'); sent.push(JSON.parse(payload)); } });
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lbv4-')), sent = [], mails = [], fail = { on: false }; let clock = 1_000_000_000_000;
+  const app = createApp({ dataDir: dir, staticDir: null, env: {}, now: () => clock, mailer: async (to, subject, text) => { mails.push({ to, subject, text, code: (/\b(\d{8})\b/.exec(text) || [])[1] }); }, sender: async (sub, payload) => { if (fail.on) throw new Error('boom'); sent.push(JSON.parse(payload)); } });
   await new Promise(r => app.server.listen(0, '127.0.0.1', r));
   const base = 'http://127.0.0.1:' + app.server.address().port;
   const call = (m, p, body, tok, dev) => fetch(base + p, { method: m, headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { Authorization: 'Bearer ' + tok } : {}, dev ? { 'X-Device-Id': dev } : {}), body: body === undefined ? undefined : JSON.stringify(body) });
-  return { app, dir, sent, fail, call, base, advance: ms => { clock += ms; }, close: () => app.server.close() };
+  return { app, dir, sent, mails, fail, call, base, advance: ms => { clock += ms; }, close: () => app.server.close() };
 }
-const signUp = async (s, email = 'a@example.com') => (await (await s.call('POST', '/api/account/register', { email, password: 'correct horse battery' })).json());
+const PW = 'correct horse battery';
+const signUp = async (s, email = 'a@example.com') => {
+  const r = await (await s.call('POST', '/api/account/register', { email, password: PW })).json(); assert.ok(r.needsVerification, 'expected verification step');
+  const code = s.mails[s.mails.length - 1].code;
+  return await (await s.call('POST', '/api/account/verify', { email, code })).json();
+};
 
 test('accounts: register, login, wrong password, duplicate email, weak password', async () => {
   const s = await setup();
