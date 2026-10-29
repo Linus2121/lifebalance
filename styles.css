@@ -149,7 +149,7 @@ code{background:#16272e;padding:1px 5px;border-radius:6px}
 body{background:radial-gradient(ellipse at 80% 0,rgba(37,115,109,.13),transparent 45%),var(--bg);letter-spacing:.01em}
 header.top{background:rgba(7,14,18,.94);border-bottom:1px solid var(--line);padding:22px max(20px,calc((100vw - 1060px)/2));gap:14px;padding-top:calc(22px + env(safe-area-inset-top))}
 header.top h1{font-size:1.5rem;letter-spacing:-.05em}header.top p{color:var(--muted)}
-.logo{animation:none;border:1px solid #3c5b44;box-shadow:0 0 26px #b8f62c14}
+.logo{animation:spin 6s linear infinite;animation-direction:normal;transform-origin:center;border:1px solid #3c5b44;box-shadow:0 0 26px #b8f62c14}
 .hbtn{background:#142128;border:1px solid #30434b;border-radius:50%;color:var(--ink)}
 .hbtn .dot{background:var(--brand);color:#111b08}
 .wrap{max-width:1060px;padding:26px 20px 110px}
@@ -181,3 +181,6 @@ input:focus,textarea:focus,select:focus{border-color:var(--teal)}
 footer{font-size:.8rem;color:#91a9b4}footer .small{font-size:.72rem}
 @media(min-width:760px){.wrap{padding-bottom:35px}nav.tabs{padding:10px}.grid2{gap:18px}.card{padding:24px}}
 @media(max-width:480px){.wrap{padding:20px 14px 110px}header.top{padding:16px 14px;padding-top:calc(16px + env(safe-area-inset-top))}.logo{width:42px;height:42px}.hbtn{min-width:44px;min-height:44px;padding:0 10px}.card{padding:18px}.welcome .btn{padding:8px 18px}.balance-ring{width:98px;height:98px}.balance-ring span{width:80px;height:80px}.task .acts{width:100%;justify-content:flex-end}.kv{grid-template-columns:1fr}.kv dd{margin-bottom:12px}.exrow{grid-template-columns:1fr 1fr}.moods button small{font-size:.7rem}}
+
+/* Respect the device's reduced-motion preference. */
+@media(prefers-reduced-motion:reduce){.logo{animation:none}}
