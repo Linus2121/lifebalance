@@ -1,4 +1,4 @@
-\ufeff/* Wellness: Fitness and Food (manual logging only). General wellbeing information, not medical advice. */
+/* Wellness: Fitness and Food (manual logging only). General wellbeing information, not medical advice. */
 (function () {
   const LB = window.LB, C = LB.C, V = LB.views, A = LB.actions, SB = LB.submits, esc = LB.esc, M = window.LBMeals;
   const WT = C.WORKOUT_TYPES, SLOTS = C.MEAL_SLOTS, DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
