@@ -4,6 +4,7 @@ import { App } from '@capacitor/app';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import install from './notifications.cjs';
+import soundPanel from './sound-panel.cjs';
 const LB=window.LB;
 const AlertTone=registerPlugin('AlertTone');
 install(LB,LocalNotifications,App,AlertTone);
@@ -27,7 +28,7 @@ refreshTone();
 const settings=LB.views.settings;
 LB.views.settings=()=>{
  let h=settings();const p=LB.D.nativeRem;
- h=h.replace('</h2>','</h2><span class="badge">Android app 1.0.2</span>');
+ h=h.replace('</h2>','</h2><span class="badge">Android app 1.0.3</span>');
  h=h.replace(/Reminders always appear inside the app while it is open\.[\s\S]*?<\/p>/,'Android schedules reminders on this phone, including when the app is closed. No reminder server is required.</p>');
  h=h.replace(/Limits: closed-app reminders need HTTPS[\s\S]*?<\/details>/,'Limits: the next 45 days (up to 300 alerts) are scheduled. Reopen the app regularly to refresh schedules, especially after time-zone changes. Android battery restrictions, force-stop and notification settings can delay or prevent alerts. Snooze actions open LifeBalance to schedule the next alert. Exact timing is not guaranteed. Real-device delivery has not been verified.</p>');
  h=h.replace(/<p class="err" role="alert">[\s\S]*?<\/p>/g,m=>m.includes('reminder service')?'':m);
@@ -35,12 +36,12 @@ LB.views.settings=()=>{
  const start=h.indexOf('<div class="row">',h.indexOf('aria-labelledby="ntH"'));
  const end=h.indexOf('</div>',start);
  if(start>=0&&end>=0)h=h.slice(0,start)+'<div class="row">'+(p.enabled?'<button class="btn" data-a="testPush">Test native reminder in 15 sec</button><button class="btn alt" data-a="retryPush">Refresh schedule</button><button class="btn danger" data-a="disablePush">Turn off native reminders</button>':'<button class="btn" data-a="enableReminders">Enable native reminders</button>')+'</div>'+h.slice(end+6);
- const tone='<div class="field" aria-labelledby="alertToneLabel"><h3 id="alertToneLabel">Alert tone</h3><p class="small">Current: <strong>'+LB.esc(toneName)+'</strong></p><button type="button" class="btn alt" data-a="chooseAlertTone">Choose alert tone</button><button type="button" class="btn" data-a="customAlertTone">Custom ringtone: choose audio file</button><button type="button" class="btn alt" data-a="deviceAlertTone">Use device tones</button><p class="muted small">Choose your own audio clip (up to 30 seconds, 5 MB; Android 10+). A copy is saved in Notifications/LifeBalance on this tablet. To select a built-in sound or Silent, use device tones, then select Sound in Android settings. This applies to all LifeBalance reminders, snoozes and test alerts on this device. Sound also depends on notification volume and Do Not Disturb. Return here and use the 15-second test to check it.</p></div>';
- const limits=h.indexOf('<p class="muted small">Limits:');
- if(limits>=0)h=h.slice(0,limits)+tone+h.slice(limits);
  h=h.replace('Export backup (JSON)' ,'Save or share backup (JSON)');
  h=h.replace('<div class="row"><button type="button" class="btn" data-a="exportData">','<p class="small">Moving from the website? Export a JSON backup in the browser, save it to this phone, then choose Import backup here. Review the record counts before confirming. The browser copy stays unchanged; the app keeps a restore copy before replacement. Backups contain private information.</p><div class="row"><button type="button" class="btn" data-a="exportData">');
- return h;
+ const sounds=soundPanel(LB.esc,toneName,p.enabled);
+ // Always render the panel, independently of reminder status/help text.
+ const headingEnd=h.indexOf('</div>');
+ return headingEnd>=0?h.slice(0,headingEnd+6)+sounds+h.slice(headingEnd+6):sounds+h;
 };
 async function shareFile(name,text){
  const path='exports/'+name.replace(/[^a-zA-Z0-9._-]/g,'_');
