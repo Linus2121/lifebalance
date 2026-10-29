@@ -142,7 +142,7 @@
     { id: 'water', icon: '\ud83d\udca7', name: 'Hydrated', desc: 'Reach your water goal', test: S => Object.keys(S.logs).some(d => S.habits.some(h => h.id === 'water' && habitActive(h, d) && habitValue(S, d, h) >= goalOn(h, d))) },
     { id: 'roll', icon: '\ud83d\udd25', name: 'On a roll', desc: '3-day streak on any habit', test: (S, t) => S.habits.some(h => habitStreak(S, h, t) >= 3) },
     { id: 'week', icon: '\ud83c\udfc6', name: 'Week warrior', desc: '7-day streak on any habit', test: (S, t) => S.habits.some(h => habitStreak(S, h, t) >= 7) },
-    { id: 'all', icon: '\ud83c\udf08', name: 'All-rounder', desc: 'Hit every habit goal in one day', test: S => Object.keys(S.logs).concat(S.fitness.workouts.map(w => w.date)).some(d => { const a = S.habits.filter(h => habitActive(h, d)); return a.length > 0 && a.every(h => habitValue(S, d, h) >= goalOn(h, d)); }) },
+    { id: 'all', icon: '\ud83c\udfaf', name: 'All-rounder', desc: 'Hit every habit goal in one day', test: S => Object.keys(S.logs).concat(S.fitness.workouts.map(w => w.date)).some(d => { const a = S.habits.filter(h => habitActive(h, d)); return a.length > 0 && a.every(h => habitValue(S, d, h) >= goalOn(h, d)); }) },
     { id: 'reflect', icon: '\ud83d\udcd4', name: 'Reflective', desc: 'Write 3 journal entries', test: S => S.journal.length >= 3 },
     { id: 'planner', icon: '\ud83d\udcc5', name: 'Planner', desc: 'Add an appointment', test: S => S.events.length > 0 },
     { id: 'mover', icon: '\ud83c\udfc3', name: 'Mover', desc: 'Log a workout', test: S => S.fitness.workouts.length > 0 },
