@@ -218,3 +218,10 @@ header.top .hbtn svg{width:22px;height:22px}
 header.top .hbtn:hover{color:var(--brand);border-color:#6c843a;background:#192b2d}
 @media(max-width:600px){header.top{min-height:112px;padding:18px 16px;padding-top:calc(18px + env(safe-area-inset-top));gap:12px}.brand-mark{width:50px;height:50px;border-radius:16px}header.top .brand-mark .logo{width:38px;height:38px}header.top h1{font-size:1.4rem}.brand-eyebrow{font-size:.5rem;letter-spacing:.12em}header.top p{font-size:.7rem;margin-top:5px}header.top .hbtn{border-radius:12px}}
 @media(max-width:380px){header.top{gap:8px}.brand-mark{width:44px;height:44px}.brand-eyebrow{display:none}header.top h1{font-size:1.23rem}header.top p{font-size:.65rem}header.top .hbtn{padding:10px}}
+
+/* Sharper, more legible header text - 2026-10-29 */
+header.top .ttl{font-family:Arial,Helvetica,sans-serif}
+header.top .brand-eyebrow{font-family:Arial,Helvetica,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.12em;color:#d4fa39;line-height:1.5;text-shadow:none}
+header.top p{font-family:Arial,Helvetica,sans-serif;font-size:.95rem;font-weight:500;color:#edf5f6;letter-spacing:0;line-height:1.5;text-shadow:none}
+@media(max-width:600px){header.top .brand-eyebrow{font-size:.58rem;letter-spacing:.08em}header.top p{font-size:.78rem;font-weight:600}}
+@media(max-width:380px){header.top p{font-size:.74rem}}
