@@ -258,7 +258,7 @@
     const S = LB.S, q = (LB.ui.mq || '').toLowerCase(), slot = LB.ui.mslot || '', cu = LB.ui.mcu || '', favOnly = !!LB.ui.mfav;
     const cuisines = [...new Set(allMeals().map(m => m.cuisine))].sort();
     let list = allMeals().filter(m => (!slot || m.slots.includes(slot)) && (!cu || m.cuisine === cu) && (!favOnly || S.food.favourites.includes(m.id)) && (!q || (m.name + ' ' + m.ingredients.join(' ')).toLowerCase().includes(q)));
-    let h = `<section class="card"><h2>Meal ideas</h2><p class="muted small">African and international ideas. Built-in meals have no nutrition values. Diet tags are best-effort suggestions, not guarantees.</p>
+    let h = `<section class="card"><h2>Meal ideas</h2><p class="muted small">Explore meals from around the world, including African, Asian, Mediterranean and other international favourites. Built-in meals have no nutrition values. Diet tags are best-effort suggestions, not guarantees.</p>
       <div class="grid2"><div><label for="m-q">Search</label><input type="search" id="m-q" value="${esc(LB.ui.mq || '')}" data-i="mealSearch" placeholder="Name or ingredient"></div>
       <div><label for="m-slot">Meal</label><select id="m-slot" data-c="mealFilter" data-arg="mslot"><option value="">Any</option>${SLOTS.map(s => opt(s, cap(s), s === slot)).join('')}</select></div>
       <div><label for="m-cu">Cuisine</label><select id="m-cu" data-c="mealFilter" data-arg="mcu"><option value="">Any</option>${cuisines.map(c => opt(c, c, c === cu)).join('')}</select></div>
