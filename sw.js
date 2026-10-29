@@ -1,5 +1,5 @@
 /* LifeBalance service worker: offline cache (network-first) and Web Push display. */
-const CACHE = 'lifebalance-midnight-v1';
+const CACHE = 'lifebalance-midnight-3';
 const ASSETS = ['./', 'index.html', 'styles.css', 'logo.png', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'config.js', 'js/merge.js', 'js/sync.js', 'js/core.js', 'js/meals.js', 'js/state.js', 'js/views-core.js', 'js/views-events.js', 'js/views-wellness.js', 'js/reminders.js', 'js/calendar.js', 'js/settings.js', 'js/main.js'];
 
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).catch(() => {}).then(() => self.skipWaiting())); });
@@ -7,7 +7,7 @@ self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Pr
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if (e.request.method !== 'GET' || u.origin !== location.origin || u.pathname.startsWith('/api/')) return;
-  e.respondWith(fetch(e.request).then(r => { const copy = r.clone(); if (r.ok) caches.open(CACHE).then(c => c.put(e.request, copy)); return r; }).catch(() => caches.match(e.request)));
+  e.respondWith(fetch(e.request, { cache: 'no-store' }).then(r => { const copy = r.clone(); if (r.ok) caches.open(CACHE).then(c => c.put(e.request, copy)); return r; }).catch(() => caches.match(e.request)));
 });
 
 self.addEventListener('push', e => {
