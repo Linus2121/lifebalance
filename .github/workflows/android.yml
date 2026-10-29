@@ -1,0 +1,32 @@
+name: Android debug build
+on:
+  push:
+    branches: [main]
+    paths: ['android/**', 'mobile/**', 'scripts/**', 'js/**', 'index.html', '*.css', 'package*.json', 'capacitor.config.json', '.github/workflows/android.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - run: npm ci
+      - run: npm test
+      - run: npm run android:sync
+      - run: bash android/gradlew -p android assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LifeBalance-debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7

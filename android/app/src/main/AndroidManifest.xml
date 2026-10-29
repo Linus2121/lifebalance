@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="false"
@@ -37,6 +37,8 @@
         </provider>
     </application>
 
+    <!-- Inexact scheduling avoids restricted exact-alarm access in this phase. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />

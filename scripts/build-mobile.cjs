@@ -9,6 +9,7 @@ for (const name of ['index.html', 'styles.css', 'config.js', 'logo.png', 'manife
   fs.cpSync(path.join(root, name), path.join(out, name), { recursive: true });
 }
 let html = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
+html = html.replace('<script charset="utf-8" src="js/main.js', '<script src="js/native.js"></script>\n<script charset="utf-8" src="js/main.js');
 html = html.replace('</head>', '<link rel="stylesheet" href="mobile.css">\n</head>');
 fs.writeFileSync(path.join(out, 'index.html'), html);
 fs.copyFileSync(path.join(root, 'mobile.css'), path.join(out, 'mobile.css'));
@@ -16,3 +17,5 @@ fs.copyFileSync(path.join(root, 'mobile.css'), path.join(out, 'mobile.css'));
 const reminders = path.join(out, 'js/reminders.js');
 fs.writeFileSync(reminders, fs.readFileSync(reminders, 'utf8').replace("if ('serviceWorker' in navigator &&", "if (!window.Capacitor?.isNativePlatform() && 'serviceWorker' in navigator &&"));
 console.log('Bundled LifeBalance offline web assets in www/');
+
+require('esbuild').buildSync({entryPoints:[path.join(root,'mobile/entry.js')],outfile:path.join(out,'js/native.js'),bundle:true,format:'iife',platform:'browser',target:'chrome100'});
