@@ -1,3 +1,4 @@
+import { registerPlugin } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { App } from '@capacitor/app';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -5,6 +6,18 @@ import { Share } from '@capacitor/share';
 import install from './notifications.cjs';
 const LB=window.LB;
 install(LB,LocalNotifications,App);
+const AlertTone=registerPlugin('AlertTone');
+let toneName='Device default';
+async function refreshTone(){
+ try{toneName=(await AlertTone.current()).name||'Device default';if(LB.ui.view==='settings')LB.render();}catch(e){toneName='Managed in Android settings';}
+}
+LB.actions.chooseAlertTone=async()=>{
+ try{await LocalNotifications.createChannel({id:'lifebalance-reminders',name:'LifeBalance reminders',importance:4,visibility:0});await AlertTone.choose();}
+ catch(e){LB.toast('Could not open sound settings. Open Android Settings > Apps > LifeBalance > Notifications.');}
+ return false;
+};
+App.addListener('appStateChange',state=>{if(state.isActive)refreshTone();}).catch(()=>{});
+refreshTone();
 // Avoid presenting web-server requirements as requirements for native reminders.
 const settings=LB.views.settings;
 LB.views.settings=()=>{
@@ -16,7 +29,10 @@ LB.views.settings=()=>{
  const start=h.indexOf('<div class="row">',h.indexOf('aria-labelledby="ntH"'));
  const end=h.indexOf('</div>',start);
  if(start>=0&&end>=0)h=h.slice(0,start)+'<div class="row">'+(p.enabled?'<button class="btn" data-a="testPush">Test native reminder in 15 sec</button><button class="btn alt" data-a="retryPush">Refresh schedule</button><button class="btn danger" data-a="disablePush">Turn off native reminders</button>':'<button class="btn" data-a="enableReminders">Enable native reminders</button>')+'</div>'+h.slice(end+6);
- h=h.replace('Export backup (JSON)','Save or share backup (JSON)');
+ const tone='<div class="field" aria-labelledby="alertToneLabel"><h3 id="alertToneLabel">Alert tone</h3><p class="small">Current: <strong>'+LB.esc(toneName)+'</strong></p><button type="button" class="btn alt" data-a="chooseAlertTone">Choose alert tone</button><p class="muted small">In Android settings, select Sound and choose a tone or Silent. This applies to all LifeBalance reminders, snoozes and test alerts on this device. Sound also depends on notification volume and Do Not Disturb. Return here and use the 15-second test to check it.</p></div>';
+ const limits=h.indexOf('<p class="muted small">Limits:');
+ if(limits>=0)h=h.slice(0,limits)+tone+h.slice(limits);
+ h=h.replace('Export backup (JSON)' ,'Save or share backup (JSON)');
  h=h.replace('<div class="row"><button type="button" class="btn" data-a="exportData">','<p class="small">Moving from the website? Export a JSON backup in the browser, save it to this phone, then choose Import backup here. Review the record counts before confirming. The browser copy stays unchanged; the app keeps a restore copy before replacement. Backups contain private information.</p><div class="row"><button type="button" class="btn" data-a="exportData">');
  return h;
 };
