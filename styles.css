@@ -225,3 +225,23 @@ header.top .brand-eyebrow{font-family:Arial,Helvetica,sans-serif;font-size:.7rem
 header.top p{font-family:Arial,Helvetica,sans-serif;font-size:.95rem;font-weight:500;color:#edf5f6;letter-spacing:0;line-height:1.5;text-shadow:none}
 @media(max-width:600px){header.top .brand-eyebrow{font-size:.58rem;letter-spacing:.08em}header.top p{font-size:.78rem;font-weight:600}}
 @media(max-width:380px){header.top p{font-size:.74rem}}
+
+/* Atmospheric teal surfaces and restrained glow - 2026-10-29 */
+body{background:radial-gradient(ellipse at 15% 0,rgba(34,130,130,.12),transparent 48%),radial-gradient(ellipse at 95% 65%,rgba(31,92,96,.07),transparent 45%),#060d11}
+.card{background:linear-gradient(135deg,#102129,#09151b);border-color:#29474f;box-shadow:0 12px 32px #0005,0 0 24px #42ded208,inset 0 1px 0 #c4fff908}
+.tip{background:linear-gradient(105deg,#153638,#10262b);border-left:3px solid var(--teal);box-shadow:-4px 0 16px #42ded218,inset 0 1px 0 #b9fff70a;color:var(--ink)}
+.note{background:linear-gradient(105deg,#202f26,#122025);box-shadow:-4px 0 16px #d4fa3910}
+.stat,.moods button,.cal button,.seg button,.chip{background:linear-gradient(140deg,#132930,#0c1b22);border-color:#2b4851;box-shadow:inset 0 1px 0 #c4fff908}
+.btn{box-shadow:0 0 18px #d4fa3920}
+.btn.alt{background:linear-gradient(135deg,#173038,#10232b);border-color:#345860;box-shadow:0 0 14px #42ded20a}
+.btn.danger{box-shadow:none}
+nav.tabs button[aria-current=page]{background:linear-gradient(120deg,#26351d,#142721);box-shadow:inset 0 0 0 1px #d4fa3924,0 0 18px #d4fa390b}
+header.top .hbtn,.brand-mark{box-shadow:0 0 18px #42ded210,inset 0 1px 0 #c4fff90a}
+.flip-front{background:linear-gradient(140deg,#153039,#0a1920);box-shadow:0 0 18px #42ded20b,inset 0 1px 0 #c4fff908}
+.flip-back{background:linear-gradient(140deg,#1a3d40,#10262d);box-shadow:0 0 20px #42ded21a}
+.achievement-flip.on .flip-front,.achievement-flip.on .flip-back{box-shadow:0 0 20px #d4fa3918}
+.modal,.alert{background:linear-gradient(140deg,#142e35,#0c1c24);border-color:#3a6068;box-shadow:0 24px 64px #0009,0 0 30px #42ded212}
+input:focus,textarea:focus,select:focus{box-shadow:0 0 0 3px #42ded218}
+:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+/* Glow belongs to surfaces; text remains crisp. */
+h1,h2,h3,p,label,.tip,.note,.stat,.btn,.flip-front,.flip-back{text-shadow:none}
