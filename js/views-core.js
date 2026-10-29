@@ -117,7 +117,7 @@
     h += pri.length < 3 ? `<form class="task" data-s="addTask" data-pri="1"><label class="sr" for="priTitle">New priority</label><input type="text" id="priTitle" name="title" placeholder="Add a priority" maxlength="120" required><button class="btn">Add</button></form>` : '<p class="muted small">All three slots are used.</p>';
     h += `</section><section class="card" aria-labelledby="tkH"><h2 id="tkH">\ud83d\udcdd Other tasks</h2>`;
     h += other.length ? other.map(x => taskRow(x)).join('') : '<p class="muted small">Nothing else planned.</p>';
-    h += `<form class="task" data-s="addTask"><label class="sr" for="taskTitle">New task</label><input type="text" id="taskTitle" name="title" placeholder="Add a task" maxlength="120" required><button class="btn">Add</button></form></section></div>`; h += tipsHtml();
+    h += `<form class="task" data-s="addTask"><label class="sr" for="taskTitle">New task</label><input type="text" id="taskTitle" name="title" placeholder="Add a task" maxlength="120" required><button class="btn">Add</button></form></section></div>`;
     const planned = S.fitness.plan.filter(p => p.day === C.dayOfWeek(t)), mp = S.food.plan[t] || {}, M = window.LBMeals, byId = id => M && M.LIB.concat(S.food.custom).find(x => x.id === id);
     const doneTypes = null, wc = w && C.habitActive(w, t);
     h += `<section class="card" aria-labelledby="tdH"><h2 id="tdH">\ud83d\uddd3\ufe0f Today's plan</h2>`;
@@ -133,7 +133,7 @@
       <p><button type="button" class="btn alt sm" data-a="goWellness" data-arg="fitness">Fitness</button> <button type="button" class="btn alt sm" data-a="goWellness" data-arg="food">Food</button> <button type="button" class="btn alt sm" data-a="go" data-arg="habits">Habits</button></p></section>`;
     h += `<details class="card"><summary>\ud83d\uddc2\ufe0f Task history (${hist.length} earlier day${hist.length === 1 ? '' : 's'})</summary>`;
     h += hist.length ? hist.map(d => { const a = S.tasks.filter(x => x.date === d); return `<div class="dayhead">${LB.fmtDate(d)} \u00b7 ${a.filter(x => x.done).length}/${a.length} done</div>` + a.map(x => taskRow(x, { move: !x.done })).join(''); }).join('') : '<p class="muted">Tasks from earlier days will appear here.</p>';
-    return h + '</details>';
+    return h + '</details>' + tipsHtml();
   };
   A.goWellness = el => { LB.ui.wtab = el.dataset.arg; LB.go('wellness'); return false; };
 

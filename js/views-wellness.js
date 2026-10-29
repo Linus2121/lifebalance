@@ -31,7 +31,7 @@
     let h = `<section class="card" aria-labelledby="fwH"><h2 id="fwH">This week</h2>`;
     h += F.goals.weeklyWorkouts > 0 ? bar(wk.length, F.goals.weeklyWorkouts, 'Workouts') : '';
     h += F.goals.weeklyMinutes > 0 ? bar(mins, F.goals.weeklyMinutes, 'Active minutes') : '';
-    h += `<div class="stats"><div class="stat"><b>${wk.length}</b>workouts</div><div class="stat"><b>${mins}</b>minutes</div><div class="stat"><b>${LB.num(km)}</b>km</div></div>`;
+    h += `<div class="stats"><div class="stat"><b>${wk.length}</b>workouts</div><div class="stat"><b>${mins}</b>minutes</div><div class="stat"><b>${LB.num(LB.displayValue(km, 'distance'))}</b>${LB.unit('distance')}</div></div>`;
     h += `<div class="row" aria-label="Days this week">` + [0, 1, 2, 3, 4, 5, 6].map(i => { const d = C.addDays(ws, i), n = F.workouts.filter(w => w.date === d).length; return `<span class="badge${n ? ' ok' : ''}" title="${LB.fmtDate(d)}">${DAYS[i].slice(0, 3)} ${n ? '\u2713' : '\u00b7'}</span>`; }).join('') + '</div>';
     h += `<p class="muted small">Walking and exercise workouts also count towards your Walking and Exercise habits automatically, so nothing is counted twice. Steps are not counted automatically and no wearable is connected.</p></section>`;
 
@@ -44,16 +44,16 @@
       <div><label for="wk-date">Date</label><input type="date" id="wk-date" name="date" value="${t}" max="${t}" required></div>
       <div><label for="wk-name">Name (optional)</label><input type="text" id="wk-name" name="name" maxlength="60" placeholder="e.g. Morning jog"></div>
       <div><label for="wk-min">Duration (minutes)</label><input type="number" id="wk-min" name="minutes" min="0" max="1440" step="1" inputmode="numeric" placeholder="30"></div>
-      <div id="wk-dist" ${['gym'].includes(lt) ? 'hidden' : ''}><label for="wk-km">Distance (km, optional)</label><input type="number" id="wk-km" name="km" min="0" max="1000" step="0.01" inputmode="decimal"></div></div>
-      <div id="wk-gym" ${lt === 'gym' || lt === 'custom' ? '' : 'hidden'}><p class="small muted">Exercises (optional): sets, repetitions and weight in kg.</p>` +
-      [0, 1, 2, 3].map(i => `<div class="exrow"><label class="sr" for="ex-n${i}">Exercise ${i + 1} name</label><input type="text" id="ex-n${i}" name="exn${i}" placeholder="Exercise" maxlength="60"><label class="sr" for="ex-s${i}">Sets</label><input type="number" id="ex-s${i}" name="exs${i}" min="0" max="100" placeholder="Sets" inputmode="numeric"><label class="sr" for="ex-r${i}">Reps</label><input type="number" id="ex-r${i}" name="exr${i}" min="0" max="1000" placeholder="Reps" inputmode="numeric"><label class="sr" for="ex-w${i}">Weight in kg</label><input type="number" id="ex-w${i}" name="exw${i}" min="0" max="1000" step="0.5" placeholder="kg" inputmode="decimal"></div>`).join('') +
+      <div id="wk-dist" ${['gym'].includes(lt) ? 'hidden' : ''}><label for="wk-km">Distance (${LB.unit('distance')}, optional)</label><input type="number" id="wk-km" name="km" min="0" max="${LB.num(LB.displayValue(1000, 'distance'))}" step="0.01" inputmode="decimal"></div></div>
+      <div id="wk-gym" ${lt === 'gym' || lt === 'custom' ? '' : 'hidden'}><p class="small muted">Exercises (optional): sets, repetitions and weight in ${LB.unit('weight')}.</p>` +
+      [0, 1, 2, 3].map(i => `<div class="exrow"><label class="sr" for="ex-n${i}">Exercise ${i + 1} name</label><input type="text" id="ex-n${i}" name="exn${i}" placeholder="Exercise" maxlength="60"><label class="sr" for="ex-s${i}">Sets</label><input type="number" id="ex-s${i}" name="exs${i}" min="0" max="100" placeholder="Sets" inputmode="numeric"><label class="sr" for="ex-r${i}">Reps</label><input type="number" id="ex-r${i}" name="exr${i}" min="0" max="1000" placeholder="Reps" inputmode="numeric"><label class="sr" for="ex-w${i}">Weight in ${LB.unit('weight')}</label><input type="number" id="ex-w${i}" name="exw${i}" min="0" max="1000" step="0.5" placeholder="${LB.unit('weight')}" inputmode="decimal"></div>`).join('') +
       `</div><label for="wk-notes">Notes (optional)</label><input type="text" id="wk-notes" name="notes" maxlength="500"><p class="row"><button class="btn">Save workout</button><button type="button" class="btn alt" data-a="hide" data-arg="showWk">Cancel</button></p></form></section>`;
 
     // history
     const hist = F.workouts.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, LB.ui.allHist ? 500 : 10);
     h += `<section class="card" aria-labelledby="fhH"><h2 id="fhH">Workout history</h2>`;
-    h += hist.length ? hist.map(w => `<div class="task"><span class="t">${TYPE_ICON[w.type]} <b>${esc(w.name || WT[w.type])}</b> <span class="muted small">${LB.fmtDate(w.date, true)}</span><br><span class="small">${w.minutes ? w.minutes + ' min' : ''}${w.distanceKm ? ' \u00b7 ' + LB.num(w.distanceKm) + ' km' : ''}</span>` +
-      (w.exercises.length ? '<br><span class="small">' + w.exercises.map(e => esc(e.name) + (e.sets || e.reps ? ' ' + (e.sets || '?') + '\u00d7' + (e.reps || '?') : '') + (e.weightKg ? ' @ ' + LB.num(e.weightKg) + ' kg' : '')).join('; ') + '</span>' : '') + (w.notes ? `<br><span class="small muted">${esc(w.notes)}</span>` : '') +
+    h += hist.length ? hist.map(w => `<div class="task"><span class="t">${TYPE_ICON[w.type]} <b>${esc(w.name || WT[w.type])}</b> <span class="muted small">${LB.fmtDate(w.date, true)}</span><br><span class="small">${w.minutes ? w.minutes + ' min' : ''}${w.distanceKm ? ' \u00b7 ' + LB.measure(w.distanceKm, 'distance') : ''}</span>` +
+      (w.exercises.length ? '<br><span class="small">' + w.exercises.map(e => esc(e.name) + (e.sets || e.reps ? ' ' + (e.sets || '?') + '\u00d7' + (e.reps || '?') : '') + (e.weightKg ? ' @ ' + LB.measure(e.weightKg, 'weight') : '')).join('; ') + '</span>' : '') + (w.notes ? `<br><span class="small muted">${esc(w.notes)}</span>` : '') +
       `</span><span class="acts"><button type="button" class="btn danger sm" data-a="delWorkout" data-id="${w.id}" aria-label="Delete workout ${esc(w.name || WT[w.type])} on ${w.date}">Delete</button></span></div>`).join('') +
       (F.workouts.length > 10 && !LB.ui.allHist ? '<button type="button" class="btn alt sm" data-a="allHist">Show all</button>' : '') : LB.empty('\ud83c\udfc3', 'No workouts yet', 'Log your first walk, run, ride or gym session above.');
     h += '</section>';
@@ -81,10 +81,10 @@
     if (F.goals.trackWeight) {
       const ws2 = F.weights.slice().sort((a, b) => b.date.localeCompare(a.date));
       h += `<section class="card" aria-labelledby="fwtH"><h2 id="fwtH">\u2696\ufe0f Weight (optional)</h2><p class="muted small">Weight is private to you. A target is optional; there is no required goal.</p>`;
-      if (ws2.length > 1) { const dlt = ws2[0].kg - ws2[ws2.length - 1].kg; h += `<p>Latest <b>${LB.num(ws2[0].kg)} kg</b> \u00b7 change since first entry: ${dlt > 0 ? '+' : ''}${LB.num(dlt)} kg</p>`; }
-      h += ws2.length ? ws2.slice(0, 8).map(x => `<div class="task"><span class="t">${LB.fmtDate(x.date, true)} \u00b7 <b>${LB.num(x.kg)} kg</b></span><span class="acts"><button type="button" class="btn danger sm" data-a="delWeight" data-id="${x.id}" aria-label="Delete weight on ${x.date}">Delete</button></span></div>`).join('') : LB.empty('\u2696\ufe0f', 'No weight entries', 'Add one when you like. You can switch tracking off in Goals.');
-      h += `<form data-s="addWeight" class="grid2"><div><label for="wt-d">Date</label><input type="date" id="wt-d" name="date" value="${t}" max="${t}" required></div><div><label for="wt-k">Weight (kg)</label><input type="number" id="wt-k" name="kg" min="20" max="500" step="0.1" inputmode="decimal" required></div>
-        <div><label for="wt-t">Target weight (kg, optional)</label><input type="number" id="wt-t" name="target" min="20" max="500" step="0.1" inputmode="decimal" value="${F.goals.targetWeightKg || ''}"></div><div><button class="btn">Save</button></div></form></section>`;
+      if (ws2.length > 1) { const dlt = ws2[0].kg - ws2[ws2.length - 1].kg; h += `<p>Latest <b>${LB.measure(ws2[0].kg, 'weight')}</b> \u00b7 change since first entry: ${dlt > 0 ? '+' : ''}${LB.measure(dlt, 'weight')}</p>`; }
+      h += ws2.length ? ws2.slice(0, 8).map(x => `<div class="task"><span class="t">${LB.fmtDate(x.date, true)} \u00b7 <b>${LB.measure(x.kg, 'weight')}</b></span><span class="acts"><button type="button" class="btn danger sm" data-a="delWeight" data-id="${x.id}" aria-label="Delete weight on ${x.date}">Delete</button></span></div>`).join('') : LB.empty('\u2696\ufe0f', 'No weight entries', 'Add one when you like. You can switch tracking off in Goals.');
+      h += `<form data-s="addWeight" class="grid2"><div><label for="wt-d">Date</label><input type="date" id="wt-d" name="date" value="${t}" max="${t}" required></div><div><label for="wt-k">Weight (${LB.unit('weight')})</label><input type="number" id="wt-k" name="kg" min="${LB.displayValue(20, 'weight')}" max="${LB.displayValue(500, 'weight')}" step="any" inputmode="decimal" required></div>
+        <div><label for="wt-t">Target weight (${LB.unit('weight')}, optional)</label><input type="number" id="wt-t" name="target" min="${LB.displayValue(20, 'weight')}" max="${LB.displayValue(500, 'weight')}" step="any" inputmode="decimal" value="${F.goals.targetWeightKg ? LB.num(LB.displayValue(F.goals.targetWeightKg, 'weight')) : ''}"></div><div><button class="btn">Save</button></div></form></section>`;
     }
     return h;
   }
@@ -97,8 +97,8 @@
   A.allHist = () => { LB.ui.allHist = true; };
   SB.addWorkout = f => {
     const d = f.date.value; if (!C.isDate(d) || d > LB.today()) { LB.toast('Choose a date that is not in the future.'); return false; }
-    const type = f.type.value, minutes = Math.round(numOrNull(f.minutes.value) || 0), km = numOrNull(f.km.value), ex = [];
-    for (let i = 0; i < 4; i++) { const n = f['exn' + i].value.trim(); if (n) ex.push({ name: n.slice(0, 60), sets: numOrNull(f['exs' + i].value), reps: numOrNull(f['exr' + i].value), weightKg: numOrNull(f['exw' + i].value) }); }
+    const type = f.type.value, minutes = Math.round(numOrNull(f.minutes.value) || 0), km = LB.metricValue(numOrNull(f.km.value), 'distance'), ex = [];
+    for (let i = 0; i < 4; i++) { const n = f['exn' + i].value.trim(); if (n) ex.push({ name: n.slice(0, 60), sets: numOrNull(f['exs' + i].value), reps: numOrNull(f['exr' + i].value), weightKg: LB.metricValue(numOrNull(f['exw' + i].value), 'weight') }); }
     if (!minutes && !km && !ex.length) { LB.toast('Add a duration, distance or exercise.'); return false; }
     LB.S.fitness.workouts.push({ id: C.uid(), date: d, type, name: f.name.value.trim().slice(0, 60), minutes, distanceKm: type === 'gym' ? null : km, notes: f.notes.value.trim().slice(0, 500), exercises: ex });
     LB.ui.showWk = false; LB.save(); LB.toast('Workout saved.');
@@ -120,8 +120,8 @@
     LB.ui.showGoals = false; LB.save(); LB.toast('Goals saved.');
   };
   SB.addWeight = f => {
-    const kg = parseFloat(f.kg.value); if (!(kg >= 20 && kg <= 500) || !C.isDate(f.date.value)) { LB.toast('Enter a weight between 20 and 500 kg.'); return false; }
-    const tg = parseFloat(f.target.value); LB.S.fitness.goals.targetWeightKg = tg >= 20 && tg <= 500 ? tg : null;
+    const kg = LB.metricValue(numOrNull(f.kg.value), 'weight'); if (!(kg >= 20 && kg <= 500) || !C.isDate(f.date.value)) { LB.toast('Enter a weight between 20 and 500 kg.'); return false; }
+    const tg = LB.metricValue(numOrNull(f.target.value), 'weight'); LB.S.fitness.goals.targetWeightKg = tg >= 20 && tg <= 500 ? tg : null;
     LB.S.fitness.weights.push({ id: C.uid(), date: f.date.value, kg }); LB.save(); LB.toast('Weight saved.');
   };
 

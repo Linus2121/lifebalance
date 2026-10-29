@@ -81,6 +81,7 @@
       <label for="srv">Server address (blank = same site)</label><input type="url" id="srv" value="${esc(D.serverUrl)}" data-i="serverUrl" placeholder="https://your-server.example.com" inputmode="url"></details></section>`;
     h += LB.sync ? LB.sync.card() : '';
 
+    h += LB.regionCard();
     h += installCard(sp, D);
 
     h += `<section class="card" aria-labelledby="pvH"><h2 id="pvH">\ud83d\udd12 Privacy</h2><form data-s="savePrivacy">
@@ -91,7 +92,7 @@
       <p class="small"><b>Where is my data?</b> Everything (tasks, habits, journal, appointments, fitness and food) is stored in this browser on this device (localStorage). Nothing is uploaded unless you (a) sign in to sync, which stores an encrypted copy on the sync server, or (b) enable closed-app reminders, which sends reminder times and short text. Clearing browser data erases the local copy, so export a backup regularly.</p></section>`;
 
     const bi = LB.getBackup(K.BK_IMPORT), bc = LB.getBackup(K.BK_CLEAR);
-    h += `<section class="card" aria-labelledby="dtH"><h2 id="dtH">\ud83d\udcbe Your data</h2>
+    h += `<section class="card" aria-labelledby="dtH"><h2 id="dtH">\ud83d\udcbe Your data</h2><p class="muted small">${D.lastExport ? 'Last backup export: ' + esc(when(D.lastExport)) : 'No backup export recorded on this device. Export regularly to protect your records.'}</p>
       <div class="row"><button type="button" class="btn" data-a="exportData">Export backup (JSON)</button><button type="button" class="btn alt" data-a="pickImport">Import backup\u2026</button><input type="file" id="impFile" accept="application/json,.json" data-c="importFile" class="sr" tabindex="-1" aria-label="Choose backup file"></div>
       <p class="muted small">Backups contain private health and journal information. Keep the file somewhere safe. Importing replaces your current data after you confirm, and a copy of what you had is kept so you can restore it.</p>
       ${bi ? `<p class="small">Before your last import: backup from ${esc(when(bi.at))} <button type="button" class="btn alt sm" data-a="restoreBk" data-arg="import">Restore it</button></p>` : ''}
@@ -117,6 +118,7 @@
   A.exportData = () => {
     const blob = new Blob([C.exportData(LB.personal)], { type: 'application/json' }), a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = 'lifebalance-backup-' + LB.today() + '.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    D.lastExport = Date.now(); LB.saveD();
     LB.toast('Backup downloaded. It contains private information, so keep it safe.'); return false;
   };
   A.pickImport = () => { document.getElementById('impFile').click(); return false; };

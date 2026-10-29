@@ -90,3 +90,12 @@ core/calendar/merge/food unit tests 34+ pass; server tests 20 pass; smoke and br
 - Accounts exist but are untested on a real host; no email verification or password reset.
 
 Powered by Lamb Technologies
+
+## Global-use improvements — 2026-10-29
+
+- Settings → Region & units: device/default or chosen date region; 12/24-hour appointment display; metric or imperial fitness entry and display. Interface remains English.
+- Fitness records continue to use kg/km internally. Switching units does not rewrite history. Recipe quantities retain their labelled units. Settings are per-device.
+- Today places suggestions below the daily plan and history. Existing quick-add remains available.
+- Account forms check backend availability before they are shown. This does not deploy a backend or complete the pending verification/recovery frontend integration.
+- Settings records the last requested backup export and encourages regular exports; downloading is controlled by the browser.
+- Validation: 37 existing tests plus 4 regional/measurement tests pass. Real-device push, signed-in cross-device sync, native packaging and full translations are not verified or completed by this update.
