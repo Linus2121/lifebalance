@@ -184,3 +184,6 @@ footer{font-size:.8rem;color:#91a9b4}footer .small{font-size:.72rem}
 
 /* Respect the device's reduced-motion preference. */
 @media(prefers-reduced-motion:reduce){.logo{animation:none}}
+
+/* Footer matches the lime action buttons. */
+footer,footer .small{color:var(--brand)}
