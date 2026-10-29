@@ -2,3 +2,11 @@ node_modules
 server/data
 *.png.tmp
 tests/shots
+# Native build outputs and private signing material
+www/
+android/.gradle/
+android/local.properties
+android/**/build/
+*.jks
+*.keystore
+key.properties

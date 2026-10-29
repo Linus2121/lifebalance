@@ -1,0 +1,14 @@
+{
+  "appId": "com.lambtechnologies.lifebalance",
+  "appName": "LifeBalance",
+  "webDir": "www",
+  "android": { "backgroundColor": "#070e12" },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#070e12",
+      "showSpinner": false
+    }
+  }
+}
