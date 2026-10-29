@@ -34,3 +34,7 @@ Native exports now use a cache file and the Android share sheet; users choose a 
 `.github/workflows/android.yml` provides an unsigned-for-release debug APK build with Java 21 and SDK 36 on GitHub Actions. This workflow has no production signing keys. It must successfully run before an installable APK is claimed. Native compilation was not possible in this workspace because SDK download approval was blocked. Android Studio has not been installed on the user's laptop. Existing source-level tests plus four native scheduling tests pass (45 total).
 
 Still pending: phone tests (foreground/background/closed/reboot/DST/permissions/snooze/accessibility/migration), store signing, full secure credential storage and account configuration, pricing and store submission. Native scheduling is not a medical or emergency alarm service.
+
+
+## Verified Android build — 2026-10-29
+GitHub Actions run 40911444774 completed successfully for commit cee2a9a5252ffd2934ce46de2d4072e35c854dda. All 46 code tests passed and Gradle assembleDebug produced the LifeBalance-debug-APK artifact. This supersedes the earlier compilation-pending notes. Download the artifact while signed into GitHub: https://github.com/Linus2121/lifebalance/actions/runs/40911444774 (artifact expires 2026-11-05). It is a debug-signed test build, not a Play Store release. Real-device behavior, closed-app reminder delivery and migration remain unverified. Android Studio installation on the user's Windows laptop is managed by the user.
