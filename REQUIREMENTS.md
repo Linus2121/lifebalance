@@ -29,6 +29,19 @@ Last updated: 2026-10-29
 9. **Connected dashboard:** Today shows workouts, meals, water, tasks, appointments. Weekly fitness/food summaries in Wellness and Progress.
 10. **Health safeguards:** general wellbeing guidance only; no diagnosis or medical diets; weight and calorie targets optional; health details hidden from notification previews by default.
 
+## v4 requirements (documented before implementation)
+
+R1. **Enable reminders flow.** One button runs: device support check → notification permission → server connection → push subscription → scheduling. Server address is not shown on ordinary screens (deployer sets `config.js`; same origin is the default; an "Advanced" disclosure is allowed for self-hosters only). Settings shows five separate statuses: Device support, Permission, Server connection, Scheduling, Delivery. "Delivery verified" is shown only after a test push was actually received by this device's service worker.
+R2. **Reminder controls.** "This device receives reminders" gates in-app alerts, browser notifications, snoozed alerts and the server schedule. Changes/cancellations are synced to the server (schedule replaced; server-side snoozes for cancelled events dropped). No duplicate alerts (shared tag/key). Snooze works with the app closed (notification action → server). Failures are reported, never hidden.
+R3. **Accounts & sync.** Email + password accounts (scrypt), per-user data, encrypted at rest (AES-256-GCM, key from server env), automatic server-side version backups with restore, sync across devices. Offline edits are kept locally and synced later. Conflicts are resolved by three-way merge; edits to the same item on two devices are never silently overwritten (the other copy is kept in a visible "Sync conflicts" list). Existing browser data is uploaded only after explicit consent.
+R4. **Platform support.** Accurate per-OS guidance in Settings. README lists which platforms were verified (only what was actually tested) and which are unverified.
+R5. **Food accuracy.** Built-in meal diet tags and allergens are derived from the listed ingredients (not hand-tagged). Ingredients that are uncertain (stock, spice blends, soy sauce, canned beans, granola, injera, cheese) cause the affirmative tag to be withheld and the meal to be marked "unverified". "Halal" is never asserted for built-in meals. Nothing is called allergy-safe.
+R6. **Calendar export.** .ics includes VALARM for the event's selected reminders (when offsets ≥ 0). UI states exports are copies and do not sync. Tests cover recurring events, cancellations and time zones.
+R7. **Today dashboard.** Compact empty cards, appointment and water info not repeated, suggestions placed below the priorities, everything reachable via "➕ Add".
+R8. **Wellness.** Summaries first; detailed forms open from "Log workout" and "Add meal" buttons. Ingredients have per-serving quantities, scaled by planned portions; shopping list combines matching items (same name and unit) and stays editable.
+
+Honest scope: no push service, device or OS other than headless Chrome on Windows can be verified in this environment.
+
 ## Non-goals (not implemented)
 
-Automatic step counting, wearable sync, food-photo analysis, a nutrition database, user accounts / cross-device sync, native mobile app. See README "Limitations".
+Automatic step counting, wearable sync, food-photo analysis, a nutrition database, native mobile app. See README "Limitations".

@@ -72,6 +72,8 @@ const ls = (page, k) => page.evaluate(k => JSON.parse(localStorage.getItem(k) ||
     });
     await step('wellness: log workout and water', async () => {
       await tab('wellness');
+      assert.equal(await page.locator('[data-s=addWorkout]').count(), 0, 'workout form hidden until Log workout');
+      await page.getByRole('button', { name: /Log workout/ }).first().click();
       await page.locator('[data-s=addWorkout] input[name=dur], [data-s=addWorkout] input[type=number]').first().fill('30');
       await page.click('[data-s=addWorkout] button[type=submit], [data-s=addWorkout] .btn');
       await page.waitForTimeout(200);
@@ -93,7 +95,7 @@ const ls = (page, k) => page.evaluate(k => JSON.parse(localStorage.getItem(k) ||
     });
     await step('calendar export: per-event menu and .ics download', async () => {
       await tab('events'); await page.locator('[data-a=calMenu]').first().click();
-      const [dl] = await Promise.all([page.waitForEvent('download'), page.locator('.modal').getByRole('button', { name: /Download/ }).click()]);
+      const [dl] = await Promise.all([page.waitForEvent('download'), page.locator('.modal').getByRole('button', { name: /Download .ics with reminder/ }).click()]);
       const txt = require('fs').readFileSync(await dl.path(), 'utf8'); assert.ok(/BEGIN:VEVENT/.test(txt) && /SUMMARY:GP check/.test(txt));
     });
     await step('install card, device toggle, manifest, offline reload', async () => {

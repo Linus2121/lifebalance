@@ -26,3 +26,31 @@ test('calendar links contain title and dates', () => {
   assert.match(Cal.googleUrl(C, timed), /calendar\.google\.com.*dates=20260310T143000Z%2F|dates=20260310T143000Z\/20260310T151500Z/);
   assert.match(Cal.outlookUrl(C, timed), /subject=GP%2C%20check/);
 });
+
+test('selected reminder alarms become VALARMs; opt-out and none omit them', () => {
+  const ev = Object.assign({}, timed, { offsets: [1440, 30, 0, 30] });
+  const ics = Cal.build(C, [ev], 0);
+  assert.equal((ics.match(/BEGIN:VALARM/g) || []).length, 3);
+  assert.match(ics, /TRIGGER:-PT1440M/); assert.match(ics, /TRIGGER:-PT30M/); assert.match(ics, /TRIGGER:-PT0M/);
+  assert.equal((Cal.build(C, [ev], 0, { alarms: false }).match(/VALARM/g) || []).length, 0);
+  assert.equal((Cal.build(C, [timed], 0).match(/VALARM/g) || []).length, 0);
+});
+test('recurring series: cancelled and moved occurrences export correctly', () => {
+  const S2 = C.freshState('2026-03-01');
+  const ev = { id: 'r1', title: 'Weekly', category: 'Meetings', allDay: false, date: '2026-03-02', endDate: '2026-03-02', startTime: '09:00', endTime: '10:00', tz: 'Europe/London', recurrence: { freq: 'weekly', interval: 1 }, reminders: { offsets: [30] }, exceptions: { '2026-03-09': { cancelled: true }, '2026-03-16': { date: '2026-03-17', startTime: '11:00', endTime: '12:00' } } };
+  S2.events.push(ev);
+  const occ = C.allOccurrences(S2, '2026-03-01', '2026-03-31');
+  const ics = Cal.build(C, occ, 0);
+  assert.ok(occ.length >= 4);
+  assert.ok(!/DTSTART:20260309T/.test(ics), 'cancelled occurrence skipped');
+  assert.match(ics, /DTSTART:20260317T110000Z/);
+  assert.match(ics, /DTSTART:20260302T090000Z/);
+  assert.ok((ics.match(/VALARM/g) || []).length >= 6);
+});
+test('time zones: New York and Tokyo convert to UTC; DST switch date is respected', () => {
+  const ny = Cal.build(C, [Object.assign({}, timed, { tz: 'America/New_York', date: '2026-03-07', endDate: '2026-03-07', startTime: '09:00', endTime: '10:00' })], 0);
+  const ny2 = Cal.build(C, [Object.assign({}, timed, { tz: 'America/New_York', date: '2026-03-09', endDate: '2026-03-09', startTime: '09:00', endTime: '10:00' })], 0);
+  assert.match(ny, /DTSTART:20260307T140000Z/); assert.match(ny2, /DTSTART:20260309T130000Z/);
+  const tk = Cal.build(C, [Object.assign({}, timed, { tz: 'Asia/Tokyo', startTime: '09:00', endTime: '10:00' })], 0);
+  assert.match(tk, /DTSTART:20260310T000000Z/);
+});

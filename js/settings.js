@@ -39,7 +39,7 @@
       <label class="check"><input type="checkbox" data-c="receive" ${recv ? 'checked' : ''}> This device receives reminders</label>
       <p class="muted small">Turn this off on devices where you do not want alerts. It only affects this device. If several devices alert you at once, each device shows one alert per reminder (repeat alerts for the same reminder replace each other).</p>
       <div class="row"><button type="button" class="btn alt" data-a="exportIcs">Export all upcoming events (.ics)</button></div>
-      <p class="muted small">Opens in Google Calendar, Outlook or Apple Calendar. Recurring events are exported for the next 12 months. The file contains your appointment details.</p></section>`;
+      <p class="muted small">Opens in Google Calendar, Outlook or Apple Calendar. Recurring events are exported for the next 12 months, with your selected reminder alarms where your calendar app supports them. Exported events are copies: changes or cancellations later in LifeBalance do not update your external calendar (re-export and remove the old copy), and vice versa. The file contains your appointment details.</p></section>`;
   }
   A.installApp = async () => { if (!installEvt) return false; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) { /* ignore */ } installEvt = null; LB.render(); return false; };
   LB.changes.receive = el => { LB.D.receive = el.checked; LB.saveD(); LB.rem.syncSoon(); LB.toast(el.checked ? 'This device will receive reminders.' : 'This device will not receive reminders.'); return 'none'; };
@@ -53,8 +53,8 @@
   };
   A.calMenu = async el => {
     const o = C.allOccurrences(LB.S, C.addDays(LB.today(), -400), C.addDays(LB.today(), 800)).find(x => x.evId === el.dataset.id && x.key === el.dataset.key); if (!o) return false;
-    const v = await LB.ask({ title: 'Add to calendar', body: '<p class="small muted">This shares the appointment details with the calendar you choose.</p>', buttons: [{ label: 'Download .ics (Apple, Outlook, Google)', value: 'ics' }, { label: 'Google Calendar', value: 'g' }, { label: 'Outlook.com', value: 'o' }, { label: 'Cancel', value: null, cls: 'alt' }] });
-    if (v === 'ics') LB.download('appointment.ics', 'text/calendar', LBCal.build(C, [o], Date.now()));
+    const v = await LB.ask({ title: 'Add to calendar', body: '<p class="small muted">This shares the appointment details with the calendar you choose. It is a copy: later changes or cancellations in LifeBalance (or in that calendar) do not sync. Alarms are included in .ics files where your calendar app supports them; Google and Outlook web links do not carry alarms.</p>', buttons: [{ label: 'Download .ics with reminder alarms', value: 'ics' }, { label: 'Download .ics without alarms', value: 'ics0' }, { label: 'Google Calendar', value: 'g' }, { label: 'Outlook.com', value: 'o' }, { label: 'Cancel', value: null, cls: 'alt' }] });
+    if (v === 'ics' || v === 'ics0') LB.download('appointment.ics', 'text/calendar', LBCal.build(C, [o], Date.now(), { alarms: v === 'ics' }));
     else if (v === 'g') window.open(LBCal.googleUrl(C, o), '_blank', 'noopener');
     else if (v === 'o') window.open(LBCal.outlookUrl(C, o), '_blank', 'noopener');
     return false;
@@ -69,17 +69,17 @@
     h += D.alerts.length ? D.alerts.map(a => `<div class="alert"><b>${esc(a.title)}</b><span>${esc(a.body)}</span><div class="row"><button type="button" class="btn sm" data-a="snooze" data-id="${esc(a.id)}" data-arg="10">Snooze 10 min</button><button type="button" class="btn danger sm" data-a="dismiss" data-id="${esc(a.id)}">Dismiss</button></div></div>`).join('') + '<button type="button" class="btn alt sm" data-a="dismissAll">Dismiss all</button>' : '<p class="muted">No active alerts.</p>';
     h += '</section>';
 
-    h += `<section class="card" aria-labelledby="ntH"><h2 id="ntH">Notifications</h2>
-      <dl class="kv"><dt>Browser permission</dt><dd>${permText(perm)}</dd><dt>Browser notifications</dt><dd>${rem.nativeOn() ? 'On' : 'Off'}</dd><dt>Service worker</dt><dd>${rem.swReady() ? 'Registered' : 'Not registered' + (sp.proto === 'file:' ? ' (open the app over http/https, not as a file)' : '')}</dd>
-      <dt>Closed-app delivery</dt><dd>${P.status === 'ok' ? '✅ Confirmed by server (' + P.count + ' reminders, ' + esc(when(P.at)) + ')' : P.status === 'syncing' ? '⏳ Setting up…' : P.status === 'failed' ? '❌ Not working' : 'Off'}</dd></dl>`;
+    const st = rem.statuses(), mark = o => o === true ? '✅' : o === false ? '⚠️' : '•';
+    h += `<section class="card" aria-labelledby="ntH"><h2 id="ntH">🔔 Reminders</h2>
+      <p class="small">Reminders always appear inside the app while it is open. “Enable reminders” also sets up alerts for when the app is closed, if a reminder service is connected.</p>
+      <dl class="kv"><dt>Device support</dt><dd>${mark(st.device.ok)} ${esc(st.device.text)}</dd><dt>Permission</dt><dd>${mark(st.permission.ok)} ${esc(st.permission.text)}</dd><dt>Server connection</dt><dd>${mark(st.server.ok)} ${esc(st.server.text)}</dd><dt>Scheduling</dt><dd>${mark(st.scheduling.ok)} ${esc(st.scheduling.text)}</dd><dt>Delivery</dt><dd>${mark(st.delivery.ok)} ${esc(st.delivery.text)}</dd></dl>`;
     if (P.error) h += `<p class="err" role="alert">${esc(P.error)}</p>`;
-    h += '<div class="row">' + (rem.nativeOn() ? '<button type="button" class="btn alt" data-a="disableNotif">Turn off browser notifications</button>' : perm === 'denied' || perm === 'unsupported' ? '' : '<button type="button" class="btn" data-a="enableNotif">Enable browser notifications</button>') + '<button type="button" class="btn alt" data-a="testAlert">Send test alert</button></div>';
+    h += '<div class="row">' + (P.enabled ? '<button type="button" class="btn" data-a="testPush">Send test to this device</button><button type="button" class="btn alt" data-a="retryPush">Retry sync</button><button type="button" class="btn danger" data-a="disablePush">Turn off closed-app reminders</button>' : '<button type="button" class="btn" data-a="enableReminders">Enable reminders</button>') + '<button type="button" class="btn alt" data-a="testAlert">Test in-app alert</button></div>';
     if (perm === 'denied') h += '<p class="note">Notifications are blocked. Allow them for this site in your browser settings, then reload.</p>';
-    h += `<details><summary>Closed-app reminders (optional server)</summary>
-      <p class="small">When LifeBalance is closed, a browser cannot run your reminders itself. This needs a small reminder server (included in the <code>server</code> folder; see the README) that sends Web Push messages through your browser's push service. A reminder is only described as scheduled after the server confirms it.</p>
-      <label for="srv">Reminder server address (leave blank if the server hosts this app)</label><input type="url" id="srv" value="${esc(D.serverUrl)}" data-i="serverUrl" placeholder="https://your-server.example.com" inputmode="url">
-      <div class="row">${P.enabled ? '<button type="button" class="btn alt" data-a="retryPush">Retry sync</button><button type="button" class="btn danger" data-a="disablePush">Turn off closed-app delivery</button>' : '<button type="button" class="btn" data-a="enablePush">Turn on closed-app delivery</button>'}</div>
-      <p class="muted small">Limitations: needs HTTPS (or localhost), a notification permission and an always-on server. The server stores only reminder times and short text (generic by default) tied to a random device token. Snoozing works only while the app is open. iPhone and iPad need the app added to the Home Screen. Reminders more than 45 days ahead are sent to the server when you next open the app.</p></details></section>`;
+    h += `<p class="muted small">Limits: closed-app reminders need HTTPS, notification permission and a connected reminder service that is always on. “Verified” appears only after a real test message reaches this device. The service stores reminder times and short text (generic by default) against a random device token. Snooze from a notification works while the app is closed when the service is connected. iPhone and iPad need the app added to the Home Screen. Reminders more than 45 days ahead are sent when you next open the app.</p>
+      <details><summary>Advanced: self-hosted server</summary><p class="small">The server address is set by whoever deploys the app (<code>config.js</code>). Use this only if you run your own server.</p>
+      <label for="srv">Server address (blank = same site)</label><input type="url" id="srv" value="${esc(D.serverUrl)}" data-i="serverUrl" placeholder="https://your-server.example.com" inputmode="url"></details></section>`;
+    h += LB.sync ? LB.sync.card() : '';
 
     h += installCard(sp, D);
 
@@ -88,7 +88,7 @@
       <p class="muted small">Off by default. When off, notifications only say “You have a reminder.” so details are not shown on a lock screen. The in-app alert tray always shows details because you are looking at the app. Turning this on sends detailed text to your reminder server if you use one.</p>
       <fieldset><legend>Default reminders for new appointments</legend>${C.PRESET_OFFSETS.map(o => `<label class="check inline"><input type="checkbox" name="o${o.min}" ${S.settings.defaultOffsets.includes(o.min) ? 'checked' : ''}> ${esc(o.label)}</label>`).join(' ')}</fieldset>
       <p><button class="btn">Save</button></p></form>
-      <p class="small"><b>Where is my data?</b> Everything (tasks, habits, journal, appointments, fitness and food) is stored only in this browser on this device (localStorage). There are no accounts and nothing is uploaded, except reminder times and short text if you turn on closed-app delivery. Clearing browser data erases it, so export a backup regularly.</p></section>`;
+      <p class="small"><b>Where is my data?</b> Everything (tasks, habits, journal, appointments, fitness and food) is stored in this browser on this device (localStorage). Nothing is uploaded unless you (a) sign in to sync, which stores an encrypted copy on the sync server, or (b) enable closed-app reminders, which sends reminder times and short text. Clearing browser data erases the local copy, so export a backup regularly.</p></section>`;
 
     const bi = LB.getBackup(K.BK_IMPORT), bc = LB.getBackup(K.BK_CLEAR);
     h += `<section class="card" aria-labelledby="dtH"><h2 id="dtH">💾 Your data</h2>

@@ -1,9 +1,9 @@
-/* Wellness: Fitness and Food (manual logging only). General wellbeing information, not medical advice. */
+﻿/* Wellness: Fitness and Food (manual logging only). General wellbeing information, not medical advice. */
 (function () {
   const LB = window.LB, C = LB.C, V = LB.views, A = LB.actions, SB = LB.submits, esc = LB.esc, M = window.LBMeals;
   const WT = C.WORKOUT_TYPES, SLOTS = C.MEAL_SLOTS, DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const SLOT_ICON = { breakfast: '🌅', lunch: '🥪', dinner: '🍽️', snack: '🍎' };
-  const TYPE_ICON = { walking: '🚶', running: '🏃', cycling: '🚴', gym: '🏋️', custom: '⭐' };
+  const SLOT_ICON = { breakfast: 'ðŸŒ…', lunch: 'ðŸ¥ª', dinner: 'ðŸ½ï¸', snack: 'ðŸŽ' };
+  const TYPE_ICON = { walking: 'ðŸš¶', running: 'ðŸƒ', cycling: 'ðŸš´', gym: 'ðŸ‹ï¸', custom: 'â­' };
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
   const numOrNull = v => { const n = parseFloat(v); return isFinite(n) && n >= 0 ? n : null; };
   const opt = (v, label, sel) => `<option value="${esc(v)}"${sel ? ' selected' : ''}>${esc(label)}</option>`;
@@ -11,7 +11,7 @@
 
   V.wellness = function () {
     const tab = LB.ui.wtab === 'food' ? 'food' : 'fitness';
-    return `<div class="seg" role="group" aria-label="Wellness section"><button type="button" data-a="wTab" data-arg="fitness" aria-pressed="${tab === 'fitness'}">💪 Fitness</button><button type="button" data-a="wTab" data-arg="food" aria-pressed="${tab === 'food'}">🥗 Food</button></div>` +
+    return `<div class="seg" role="group" aria-label="Wellness section"><button type="button" data-a="wTab" data-arg="fitness" aria-pressed="${tab === 'fitness'}">ðŸ’ª Fitness</button><button type="button" data-a="wTab" data-arg="food" aria-pressed="${tab === 'food'}">ðŸ¥— Food</button></div>` +
       (tab === 'food' ? food() : fitness()) +
       '<p class="muted small">General wellbeing information only. LifeBalance does not diagnose conditions or prescribe diets or exercise. Speak to a health professional about medical needs.</p>';
   };
@@ -32,14 +32,14 @@
     h += F.goals.weeklyWorkouts > 0 ? bar(wk.length, F.goals.weeklyWorkouts, 'Workouts') : '';
     h += F.goals.weeklyMinutes > 0 ? bar(mins, F.goals.weeklyMinutes, 'Active minutes') : '';
     h += `<div class="stats"><div class="stat"><b>${wk.length}</b>workouts</div><div class="stat"><b>${mins}</b>minutes</div><div class="stat"><b>${LB.num(km)}</b>km</div></div>`;
-    h += `<div class="row" aria-label="Days this week">` + [0, 1, 2, 3, 4, 5, 6].map(i => { const d = C.addDays(ws, i), n = F.workouts.filter(w => w.date === d).length; return `<span class="badge${n ? ' ok' : ''}" title="${LB.fmtDate(d)}">${DAYS[i].slice(0, 3)} ${n ? '✓' : '·'}</span>`; }).join('') + '</div>';
+    h += `<div class="row" aria-label="Days this week">` + [0, 1, 2, 3, 4, 5, 6].map(i => { const d = C.addDays(ws, i), n = F.workouts.filter(w => w.date === d).length; return `<span class="badge${n ? ' ok' : ''}" title="${LB.fmtDate(d)}">${DAYS[i].slice(0, 3)} ${n ? 'âœ“' : 'Â·'}</span>`; }).join('') + '</div>';
     h += `<p class="muted small">Walking and exercise workouts also count towards your Walking and Exercise habits automatically, so nothing is counted twice. Steps are not counted automatically and no wearable is connected.</p></section>`;
 
     const today = F.plan.filter(p => p.day === planDay(t));
-    if (today.length) h += `<section class="card"><h2>Planned today</h2>` + today.map(p => `<div class="task"><span class="t">${TYPE_ICON[p.type]} ${esc(p.name || WT[p.type])}${p.minutes ? ' · ' + p.minutes + ' min' : ''}${p.time ? ' · ' + p.time : ''}</span><span class="acts"><button type="button" class="btn sm" data-a="logPlanned" data-id="${p.id}">Mark done</button></span></div>`).join('') + '</section>';
+    if (today.length) h += `<section class="card"><h2>Planned today</h2>` + today.map(p => `<div class="task"><span class="t">${TYPE_ICON[p.type]} ${esc(p.name || WT[p.type])}${p.minutes ? ' Â· ' + p.minutes + ' min' : ''}${p.time ? ' Â· ' + p.time : ''}</span><span class="acts"><button type="button" class="btn sm" data-a="logPlanned" data-id="${p.id}">Mark done</button></span></div>`).join('') + '</section>';
 
     const lt = LB.ui.wkType || 'walking';
-    h += `<section class="card" aria-labelledby="flH"><h2 id="flH">Log a workout</h2><form data-s="addWorkout">
+    h += !LB.ui.showWk ? `<section class="card"><button type="button" class="btn big" data-a="reveal" data-arg="showWk" data-focus="#wk-type">âž• Log workout</button></section>` : `<section class="card" aria-labelledby="flH"><h2 id="flH">Log a workout</h2><form data-s="addWorkout">
       <div class="grid2"><div><label for="wk-type">Activity</label><select id="wk-type" name="type" data-c="wkType">${Object.keys(WT).map(k => opt(k, WT[k], k === lt)).join('')}</select></div>
       <div><label for="wk-date">Date</label><input type="date" id="wk-date" name="date" value="${t}" max="${t}" required></div>
       <div><label for="wk-name">Name (optional)</label><input type="text" id="wk-name" name="name" maxlength="60" placeholder="e.g. Morning jog"></div>
@@ -47,29 +47,29 @@
       <div id="wk-dist" ${['gym'].includes(lt) ? 'hidden' : ''}><label for="wk-km">Distance (km, optional)</label><input type="number" id="wk-km" name="km" min="0" max="1000" step="0.01" inputmode="decimal"></div></div>
       <div id="wk-gym" ${lt === 'gym' || lt === 'custom' ? '' : 'hidden'}><p class="small muted">Exercises (optional): sets, repetitions and weight in kg.</p>` +
       [0, 1, 2, 3].map(i => `<div class="exrow"><label class="sr" for="ex-n${i}">Exercise ${i + 1} name</label><input type="text" id="ex-n${i}" name="exn${i}" placeholder="Exercise" maxlength="60"><label class="sr" for="ex-s${i}">Sets</label><input type="number" id="ex-s${i}" name="exs${i}" min="0" max="100" placeholder="Sets" inputmode="numeric"><label class="sr" for="ex-r${i}">Reps</label><input type="number" id="ex-r${i}" name="exr${i}" min="0" max="1000" placeholder="Reps" inputmode="numeric"><label class="sr" for="ex-w${i}">Weight in kg</label><input type="number" id="ex-w${i}" name="exw${i}" min="0" max="1000" step="0.5" placeholder="kg" inputmode="decimal"></div>`).join('') +
-      `</div><label for="wk-notes">Notes (optional)</label><input type="text" id="wk-notes" name="notes" maxlength="500"><p><button class="btn">Save workout</button></p></form></section>`;
+      `</div><label for="wk-notes">Notes (optional)</label><input type="text" id="wk-notes" name="notes" maxlength="500"><p class="row"><button class="btn">Save workout</button><button type="button" class="btn alt" data-a="hide" data-arg="showWk">Cancel</button></p></form></section>`;
 
     // history
     const hist = F.workouts.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, LB.ui.allHist ? 500 : 10);
     h += `<section class="card" aria-labelledby="fhH"><h2 id="fhH">Workout history</h2>`;
-    h += hist.length ? hist.map(w => `<div class="task"><span class="t">${TYPE_ICON[w.type]} <b>${esc(w.name || WT[w.type])}</b> <span class="muted small">${LB.fmtDate(w.date, true)}</span><br><span class="small">${w.minutes ? w.minutes + ' min' : ''}${w.distanceKm ? ' · ' + LB.num(w.distanceKm) + ' km' : ''}</span>` +
-      (w.exercises.length ? '<br><span class="small">' + w.exercises.map(e => esc(e.name) + (e.sets || e.reps ? ' ' + (e.sets || '?') + '×' + (e.reps || '?') : '') + (e.weightKg ? ' @ ' + LB.num(e.weightKg) + ' kg' : '')).join('; ') + '</span>' : '') + (w.notes ? `<br><span class="small muted">${esc(w.notes)}</span>` : '') +
+    h += hist.length ? hist.map(w => `<div class="task"><span class="t">${TYPE_ICON[w.type]} <b>${esc(w.name || WT[w.type])}</b> <span class="muted small">${LB.fmtDate(w.date, true)}</span><br><span class="small">${w.minutes ? w.minutes + ' min' : ''}${w.distanceKm ? ' Â· ' + LB.num(w.distanceKm) + ' km' : ''}</span>` +
+      (w.exercises.length ? '<br><span class="small">' + w.exercises.map(e => esc(e.name) + (e.sets || e.reps ? ' ' + (e.sets || '?') + 'Ã—' + (e.reps || '?') : '') + (e.weightKg ? ' @ ' + LB.num(e.weightKg) + ' kg' : '')).join('; ') + '</span>' : '') + (w.notes ? `<br><span class="small muted">${esc(w.notes)}</span>` : '') +
       `</span><span class="acts"><button type="button" class="btn danger sm" data-a="delWorkout" data-id="${w.id}" aria-label="Delete workout ${esc(w.name || WT[w.type])} on ${w.date}">Delete</button></span></div>`).join('') +
-      (F.workouts.length > 10 && !LB.ui.allHist ? '<button type="button" class="btn alt sm" data-a="allHist">Show all</button>' : '') : LB.empty('🏃', 'No workouts yet', 'Log your first walk, run, ride or gym session above.');
+      (F.workouts.length > 10 && !LB.ui.allHist ? '<button type="button" class="btn alt sm" data-a="allHist">Show all</button>' : '') : LB.empty('ðŸƒ', 'No workouts yet', 'Log your first walk, run, ride or gym session above.');
     h += '</section>';
 
     // plan
     h += `<section class="card" aria-labelledby="fpH"><h2 id="fpH">Weekly workout plan</h2>`;
-    h += F.plan.length ? DAYS.map((n, i) => { const a = F.plan.filter(p => p.day === dowOfRow(i)); return a.length ? `<div class="dayhead">${n}</div>` + a.map(p => `<div class="task"><span class="t">${TYPE_ICON[p.type]} ${esc(p.name || WT[p.type])}${p.minutes ? ' · ' + p.minutes + ' min' : ''}${p.time ? ' · ' + p.time : ''}</span><span class="acts"><button type="button" class="btn danger sm" data-a="delPlan" data-id="${p.id}" aria-label="Remove ${esc(p.name || WT[p.type])} on ${n}">Remove</button></span></div>`).join('') : ''; }).join('') : LB.empty('🗓️', 'No plan yet', 'Add the workouts you would like to do each week.');
-    h += `<form data-s="addPlan" class="grid2"><div><label for="pl-day">Day</label><select id="pl-day" name="day">${DAYS.map((n, i) => opt(dowOfRow(i), n, dowOfRow(i) === planDay(t))).join('')}</select></div>
+    h += F.plan.length ? DAYS.map((n, i) => { const a = F.plan.filter(p => p.day === dowOfRow(i)); return a.length ? `<div class="dayhead">${n}</div>` + a.map(p => `<div class="task"><span class="t">${TYPE_ICON[p.type]} ${esc(p.name || WT[p.type])}${p.minutes ? ' Â· ' + p.minutes + ' min' : ''}${p.time ? ' Â· ' + p.time : ''}</span><span class="acts"><button type="button" class="btn danger sm" data-a="delPlan" data-id="${p.id}" aria-label="Remove ${esc(p.name || WT[p.type])} on ${n}">Remove</button></span></div>`).join('') : ''; }).join('') : LB.empty('ðŸ—“ï¸', 'No plan yet', 'Add the workouts you would like to do each week.');
+    h += !LB.ui.showPlan ? `<p><button type="button" class="btn alt" data-a="reveal" data-arg="showPlan" data-focus="#pl-day">âž• Add to plan</button></p></section>` : `<form data-s="addPlan" class="grid2"><div><label for="pl-day">Day</label><select id="pl-day" name="day">${DAYS.map((n, i) => opt(dowOfRow(i), n, dowOfRow(i) === planDay(t))).join('')}</select></div>
       <div><label for="pl-type">Activity</label><select id="pl-type" name="type">${Object.keys(WT).map(k => opt(k, WT[k])).join('')}</select></div>
       <div><label for="pl-name">Name (optional)</label><input type="text" id="pl-name" name="name" maxlength="60"></div>
       <div><label for="pl-min">Minutes</label><input type="number" id="pl-min" name="minutes" min="0" max="1440" inputmode="numeric" placeholder="30"></div>
-      <div><label for="pl-time">Time (optional, for reminders)</label><input type="time" id="pl-time" name="time"></div><div><button class="btn">Add to plan</button></div></form></section>`;
+      <div><label for="pl-time">Time (optional, for reminders)</label><input type="time" id="pl-time" name="time"></div><div class="row"><button class="btn">Add to plan</button><button type="button" class="btn alt" data-a="hide" data-arg="showPlan">Cancel</button></div></form></section>`;
 
     // goals + reminders
     const R = S.settings.fitnessReminders;
-    h += `<section class="card" aria-labelledby="fgH"><h2 id="fgH">Goals and reminders</h2><form data-s="saveFitGoals" class="grid2">
+    h += `<section class="card" aria-labelledby="fgH"><h2 id="fgH">Goals and reminders</h2>${LB.ui.showGoals ? '' : `<p class="small">Goal: ${F.goals.weeklyWorkouts} workouts and ${F.goals.weeklyMinutes} active minutes a week Â· workout reminders ${R.enabled ? "on" : "off"}.</p><button type="button" class="btn alt" data-a="reveal" data-arg="showGoals" data-focus="#g-w">Edit goals and reminders</button>`}<form data-s="saveFitGoals" class="grid2" ${LB.ui.showGoals ? '' : "hidden"}>
       <div><label for="g-w">Workouts per week</label><input type="number" id="g-w" name="w" min="0" max="21" value="${F.goals.weeklyWorkouts}" inputmode="numeric"></div>
       <div><label for="g-m">Active minutes per week</label><input type="number" id="g-m" name="m" min="0" max="10080" value="${F.goals.weeklyMinutes}" inputmode="numeric"></div>
       <div class="full"><label class="check"><input type="checkbox" name="fr" ${R.enabled ? 'checked' : ''}> Remind me before planned workouts that have a time</label></div>
@@ -80,9 +80,9 @@
 
     if (F.goals.trackWeight) {
       const ws2 = F.weights.slice().sort((a, b) => b.date.localeCompare(a.date));
-      h += `<section class="card" aria-labelledby="fwtH"><h2 id="fwtH">⚖️ Weight (optional)</h2><p class="muted small">Weight is private to you. A target is optional; there is no required goal.</p>`;
-      if (ws2.length > 1) { const dlt = ws2[0].kg - ws2[ws2.length - 1].kg; h += `<p>Latest <b>${LB.num(ws2[0].kg)} kg</b> · change since first entry: ${dlt > 0 ? '+' : ''}${LB.num(dlt)} kg</p>`; }
-      h += ws2.length ? ws2.slice(0, 8).map(x => `<div class="task"><span class="t">${LB.fmtDate(x.date, true)} · <b>${LB.num(x.kg)} kg</b></span><span class="acts"><button type="button" class="btn danger sm" data-a="delWeight" data-id="${x.id}" aria-label="Delete weight on ${x.date}">Delete</button></span></div>`).join('') : LB.empty('⚖️', 'No weight entries', 'Add one when you like. You can switch tracking off in Goals.');
+      h += `<section class="card" aria-labelledby="fwtH"><h2 id="fwtH">âš–ï¸ Weight (optional)</h2><p class="muted small">Weight is private to you. A target is optional; there is no required goal.</p>`;
+      if (ws2.length > 1) { const dlt = ws2[0].kg - ws2[ws2.length - 1].kg; h += `<p>Latest <b>${LB.num(ws2[0].kg)} kg</b> Â· change since first entry: ${dlt > 0 ? '+' : ''}${LB.num(dlt)} kg</p>`; }
+      h += ws2.length ? ws2.slice(0, 8).map(x => `<div class="task"><span class="t">${LB.fmtDate(x.date, true)} Â· <b>${LB.num(x.kg)} kg</b></span><span class="acts"><button type="button" class="btn danger sm" data-a="delWeight" data-id="${x.id}" aria-label="Delete weight on ${x.date}">Delete</button></span></div>`).join('') : LB.empty('âš–ï¸', 'No weight entries', 'Add one when you like. You can switch tracking off in Goals.');
       h += `<form data-s="addWeight" class="grid2"><div><label for="wt-d">Date</label><input type="date" id="wt-d" name="date" value="${t}" max="${t}" required></div><div><label for="wt-k">Weight (kg)</label><input type="number" id="wt-k" name="kg" min="20" max="500" step="0.1" inputmode="decimal" required></div>
         <div><label for="wt-t">Target weight (kg, optional)</label><input type="number" id="wt-t" name="target" min="20" max="500" step="0.1" inputmode="decimal" value="${F.goals.targetWeightKg || ''}"></div><div><button class="btn">Save</button></div></form></section>`;
     }
@@ -101,7 +101,7 @@
     for (let i = 0; i < 4; i++) { const n = f['exn' + i].value.trim(); if (n) ex.push({ name: n.slice(0, 60), sets: numOrNull(f['exs' + i].value), reps: numOrNull(f['exr' + i].value), weightKg: numOrNull(f['exw' + i].value) }); }
     if (!minutes && !km && !ex.length) { LB.toast('Add a duration, distance or exercise.'); return false; }
     LB.S.fitness.workouts.push({ id: C.uid(), date: d, type, name: f.name.value.trim().slice(0, 60), minutes, distanceKm: type === 'gym' ? null : km, notes: f.notes.value.trim().slice(0, 500), exercises: ex });
-    LB.save(); LB.toast('Workout saved.');
+    LB.ui.showWk = false; LB.save(); LB.toast('Workout saved.');
   };
   A.logPlanned = el => {
     const p = LB.S.fitness.plan.find(x => x.id === el.dataset.id); if (!p) return;
@@ -112,12 +112,12 @@
   A.delWeight = el => LB.remove(() => LB.S.fitness.weights, el.dataset.id, 'Weight entry');
   SB.addPlan = f => {
     LB.S.fitness.plan.push({ id: C.uid(), day: +f.day.value, type: f.type.value, name: f.name.value.trim().slice(0, 60), minutes: Math.round(numOrNull(f.minutes.value) || 0), time: f.time.value || '' });
-    LB.save(); LB.toast('Added to your weekly plan.');
+    LB.ui.showPlan = false; LB.save(); LB.toast('Added to your weekly plan.');
   };
   SB.saveFitGoals = f => {
     const S = LB.S; S.fitness.goals.weeklyWorkouts = Math.min(21, Math.round(numOrNull(f.w.value) || 0)); S.fitness.goals.weeklyMinutes = Math.min(10080, Math.round(numOrNull(f.m.value) || 0));
     S.fitness.goals.trackWeight = f.tw.checked; S.settings.fitnessReminders = { enabled: f.fr.checked, lead: +f.lead.value };
-    LB.save(); LB.toast('Goals saved.');
+    LB.ui.showGoals = false; LB.save(); LB.toast('Goals saved.');
   };
   SB.addWeight = f => {
     const kg = parseFloat(f.kg.value); if (!(kg >= 20 && kg <= 500) || !C.isDate(f.date.value)) { LB.toast('Enter a weight between 20 and 500 kg.'); return false; }
@@ -136,26 +136,29 @@
     return `<div class="seg sub" role="group" aria-label="Food section">${FT.map(x => `<button type="button" data-a="fTab" data-arg="${x[0]}" aria-pressed="${tab === x[0]}">${x[1]}</button>`).join('')}</div>` + ({ diary, plan, shop, meals, prefs }[tab] || diary)();
   }
   A.fTab = el => { LB.ui.ftab = el.dataset.arg; };
+  // Detailed forms stay hidden until the matching button is pressed.
+  A.reveal = el => { LB.ui[el.dataset.arg] = true; if (el.dataset.focus) LB.ui.focus = el.dataset.focus; };
+  A.hide = el => { LB.ui[el.dataset.arg] = false; };
 
   function diary() {
     const S = LB.S, P = S.food.prefs, t = LB.today(), d = LB.ui.fdate || t, list = S.food.diary[d] || [], w = water();
     let h = `<section class="card"><label for="fd-date">Day</label><input type="date" id="fd-date" value="${d}" max="${t}" data-c="fdate" style="max-width:200px"> ${d !== t ? '<button type="button" class="btn alt sm" data-a="fToday">Today</button>' : ''}</section>`;
-    h += `<section class="card" aria-labelledby="fdH"><h2 id="fdH">Food diary · ${LB.fmtDate(d)}</h2>`;
+    h += `<section class="card" aria-labelledby="fdH"><h2 id="fdH">Food diary Â· ${LB.fmtDate(d)}</h2>`;
     let total = 0, counted = 0;
     SLOTS.forEach(s => {
       const e = list.filter(x => x.meal === s);
-      h += `<div class="dayhead">${SLOT_ICON[s]} ${cap(s)}</div>` + (e.length ? e.map(x => { if (x.kcal != null) { total += x.kcal * x.servings; counted++; } return `<div class="task"><span class="t">${esc(x.name)} <span class="muted small">× ${LB.num(x.servings)} serving${x.servings === 1 ? '' : 's'}${P.trackCalories && x.kcal != null ? ' · ~' + Math.round(x.kcal * x.servings) + ' kcal (your estimate)' : ''}</span></span><span class="acts"><button type="button" class="btn danger sm" data-a="delDiary" data-id="${x.id}" data-arg="${d}" aria-label="Delete ${esc(x.name)}">Delete</button></span></div>`; }).join('') : '<p class="muted small">Nothing logged.</p>');
+      h += `<div class="dayhead">${SLOT_ICON[s]} ${cap(s)}</div>` + (e.length ? e.map(x => { if (x.kcal != null) { total += x.kcal * x.servings; counted++; } return `<div class="task"><span class="t">${esc(x.name)} <span class="muted small">Ã— ${LB.num(x.servings)} serving${x.servings === 1 ? '' : 's'}${P.trackCalories && x.kcal != null ? ' Â· ~' + Math.round(x.kcal * x.servings) + ' kcal (your estimate)' : ''}</span></span><span class="acts"><button type="button" class="btn danger sm" data-a="delDiary" data-id="${x.id}" data-arg="${d}" aria-label="Delete ${esc(x.name)}">Delete</button></span></div>`; }).join('') : '<p class="muted small">Nothing logged.</p>');
     });
-    if (!list.length) h += LB.empty('🍽️', 'No meals logged', 'Add what you ate below. This diary is private and optional.');
-    if (P.trackCalories) h += `<p class="note"><b>Calories (your own estimates):</b> ~${Math.round(total)} kcal from ${counted} item${counted === 1 ? '' : 's'} with an estimate${P.calorieTarget ? ' · your optional target: ' + P.calorieTarget + ' kcal' : ''}. Built-in meals have no nutrition data; values shown are only what you entered. They are not exact.</p>`;
-    h += `<form data-s="addDiary" class="grid2"><div><label for="fd-slot">Meal</label><select id="fd-slot" name="slot">${SLOTS.map(s => opt(s, cap(s))).join('')}</select></div>
+    if (!list.length) h += LB.empty('ðŸ½ï¸', 'No meals logged', 'Add what you ate below. This diary is private and optional.');
+    if (P.trackCalories) h += `<p class="note"><b>Calories (your own estimates):</b> ~${Math.round(total)} kcal from ${counted} item${counted === 1 ? '' : 's'} with an estimate${P.calorieTarget ? ' Â· your optional target: ' + P.calorieTarget + ' kcal' : ''}. Built-in meals have no nutrition data; values shown are only what you entered. They are not exact.</p>`;
+    h += !LB.ui.showMeal ? `<p><button type="button" class="btn big" data-a="reveal" data-arg="showMeal" data-focus="#fd-name">âž• Add meal</button></p></section>` : `<form data-s="addDiary" class="grid2"><div><label for="fd-slot">Meal</label><select id="fd-slot" name="slot">${SLOTS.map(s => opt(s, cap(s))).join('')}</select></div>
       <div><label for="fd-name">Food or meal</label><input type="text" id="fd-name" name="name" list="mealNames" maxlength="100" required autocomplete="off"><datalist id="mealNames">${allMeals().map(m => `<option value="${esc(m.name)}">`).join('')}</datalist></div>
       <div><label for="fd-srv">Portion (servings)</label><input type="number" id="fd-srv" name="srv" min="0.1" max="20" step="0.25" value="1" inputmode="decimal"></div>` +
       (P.trackCalories ? `<div><label for="fd-kcal">Calories per serving (optional estimate)</label><input type="number" id="fd-kcal" name="kcal" min="0" max="20000" inputmode="numeric"></div>` : '') +
-      `<div class="full"><button class="btn">Add to diary</button></div></form></section>`;
+      `<div class="full row"><button class="btn">Add to diary</button><button type="button" class="btn alt" data-a="hide" data-arg="showMeal">Cancel</button></div></form></section>`;
     if (w) {
       const v = C.habitValue(S, d, w), g = C.goalOn(w, d);
-      h += `<section class="card" aria-labelledby="fwaH"><h2 id="fwaH">💧 Water</h2>${bar(v, g, 'Water (' + w.unit + ')')}<div class="row"><button type="button" class="btn alt" data-a="waterStep" data-arg="-1" data-key="${d}" aria-label="Remove one step of water">−</button><button type="button" class="btn" data-a="waterStep" data-arg="1" data-key="${d}" aria-label="Add one step of water">+ ${LB.num(w.step)} ${esc(w.unit)}</button></div>
+      h += `<section class="card" aria-labelledby="fwaH"><h2 id="fwaH">ðŸ’§ Water</h2>${bar(v, g, 'Water (' + w.unit + ')')}<div class="row"><button type="button" class="btn alt" data-a="waterStep" data-arg="-1" data-key="${d}" aria-label="Remove one step of water">âˆ’</button><button type="button" class="btn" data-a="waterStep" data-arg="1" data-key="${d}" aria-label="Add one step of water">+ ${LB.num(w.step)} ${esc(w.unit)}</button></div>
         <p class="muted small">This is the same water count as on the Habits tab, so it is never counted twice.</p>`;
       const H = S.settings.hydrationReminders;
       h += `<form data-s="saveHydration"><label class="check"><input type="checkbox" name="on" ${H.enabled ? 'checked' : ''}> Hydration reminders</label><label for="hy-t">Times (comma separated, 24h, e.g. 10:00, 15:00)</label><input type="text" id="hy-t" name="times" value="${esc(H.times.join(', '))}"><p><button class="btn sm">Save</button></p></form></section>`;
@@ -179,7 +182,7 @@
     let kcal = f.kcal ? numOrNull(f.kcal.value) : null; if (kcal == null && m && m.nutrition) kcal = m.nutrition.kcal;
     (S.food.diary[d] = S.food.diary[d] || []).push({ id: C.uid(), meal: f.slot.value, name: name.slice(0, 100), mealId: m ? m.id : '', servings: Math.min(20, Math.max(0.1, parseFloat(f.srv.value) || 1)), kcal });
     LB.save();
-    const w = m ? warn(m) : []; LB.toast(w.length ? 'Added. Note: ' + w.join('; ') + '.' : 'Added to your diary.');
+    LB.ui.showMeal = false; const w = m ? warn(m) : []; LB.toast(w.length ? 'Added. Note: ' + w.join('; ') + '.' : 'Added to your diary.');
   };
   A.delDiary = el => LB.remove(() => LB.S.food.diary[el.dataset.arg] || [], el.dataset.id, 'Entry');
   SB.saveHydration = f => {
@@ -192,15 +195,15 @@
   /* ---- meal plan + shopping ---- */
   function plan() {
     const S = LB.S, ws = LB.ui.pwk || C.weekStart(LB.today());
-    let h = `<section class="card"><div class="row between"><button type="button" class="btn alt sm" data-a="pWeek" data-arg="-7" aria-label="Previous week">‹ Prev</button><b>Week of ${LB.fmtDate(ws)}</b><button type="button" class="btn alt sm" data-a="pWeek" data-arg="7" aria-label="Next week">Next ›</button></div></section>`;
+    let h = `<section class="card"><div class="row between"><button type="button" class="btn alt sm" data-a="pWeek" data-arg="-7" aria-label="Previous week">â€¹ Prev</button><b>Week of ${LB.fmtDate(ws)}</b><button type="button" class="btn alt sm" data-a="pWeek" data-arg="7" aria-label="Next week">Next â€º</button></div></section>`;
     for (let i = 0; i < 7; i++) {
       const d = C.addDays(ws, i), p = S.food.plan[d] || {};
       h += `<section class="card"><h2>${DAYS[i]} <span class="muted small">${LB.fmtDate(d)}</span></h2><div class="grid2">` + ['breakfast', 'lunch', 'dinner', 'snack'].map(s => {
         const cands = allMeals().filter(m => m.slots.includes(s) || m.id === p[s]).sort((a, b) => (S.food.favourites.includes(b.id) - S.food.favourites.includes(a.id)) || a.name.localeCompare(b.name));
-        return `<div><label for="pm-${d}-${s}">${SLOT_ICON[s]} ${cap(s)}</label><select id="pm-${d}-${s}" data-c="planMeal" data-id="${d}" data-arg="${s}"><option value="">— none —</option>${cands.map(m => opt(m.id, (S.food.favourites.includes(m.id) ? '★ ' : '') + m.name + (warn(m).length ? ' ⚠' : ''), m.id === p[s])).join('')}</select></div>`;
+        return `<div><label for="pm-${d}-${s}">${SLOT_ICON[s]} ${cap(s)}</label><select id="pm-${d}-${s}" data-c="planMeal" data-id="${d}" data-arg="${s}"><option value="">â€” none â€”</option>${cands.map(m => opt(m.id, (S.food.favourites.includes(m.id) ? 'â˜… ' : '') + m.name + (warn(m).length ? ' âš ' : ''), m.id === p[s])).join('')}</select><label class="sr" for="pp-${d}-${s}">Portions for ${s}</label><input type="number" id="pp-${d}-${s}" class="portion" min="0.5" max="20" step="0.5" value="${S.food.planServings[d + '|' + s] || 1}" data-c="planPortions" data-id="${d}" data-arg="${s}" aria-label="Portions for ${cap(s)} on ${DAYS[i]}" title="Portions"></div>`;
       }).join('') + '</div>';
       const ws2 = Object.keys(p).map(s => { const m = mealById(p[s]); return m && warn(m).length ? esc(m.name) + ': ' + esc(warn(m).join('; ')) : ''; }).filter(Boolean);
-      if (ws2.length) h += `<p class="note" role="note">⚠ ${ws2.join('<br>⚠ ')}<br><span class="small">Tags are best-effort. Always check labels and ingredients yourself.</span></p>`;
+      if (ws2.length) h += `<p class="note" role="note">âš  ${ws2.join('<br>âš  ')}<br><span class="small">Tags are best-effort. Always check labels and ingredients yourself.</span></p>`;
       h += '</section>';
     }
     return h + '<p class="muted small">Planning a meal updates your shopping list automatically.</p>';
@@ -208,29 +211,37 @@
   A.pWeek = el => { LB.ui.pwk = C.addDays(LB.ui.pwk || C.weekStart(LB.today()), +el.dataset.arg); };
   LB.changes.planMeal = el => {
     const S = LB.S, d = el.dataset.id, s = el.dataset.arg; S.food.plan[d] = S.food.plan[d] || {};
-    if (el.value) S.food.plan[d][s] = el.value; else delete S.food.plan[d][s];
+    if (el.value) S.food.plan[d][s] = el.value; else { delete S.food.plan[d][s]; delete S.food.planServings[d + '|' + s]; }
     if (!Object.keys(S.food.plan[d]).length) delete S.food.plan[d];
     rebuildShopping(); LB.save(); LB.ui.focus = '#' + el.id;
   };
   // Rebuilds the auto-generated part of the shopping list from meals planned from today onwards. Manual and edited items and ticks are kept.
+  LB.changes.planPortions = el => {
+    const S = LB.S, k = el.dataset.id + '|' + el.dataset.arg, v = Math.min(20, Math.max(0.5, parseFloat(el.value) || 1));
+    if (!(S.food.plan[el.dataset.id] || {})[el.dataset.arg]) return false;
+    if (v === 1) delete S.food.planServings[k]; else S.food.planServings[k] = v;
+    rebuildShopping(); LB.save(); LB.ui.focus = '#' + el.id;
+  };
   function rebuildShopping() {
-    const F = LB.S.food, t = LB.today(), map = new Map(), old = new Map(F.shopping.filter(x => x.auto).map(x => [x.name.toLowerCase(), x]));
+    const F = LB.S.food, t = LB.today(), entries = [], old = new Map(F.shopping.filter(x => x.auto).map(x => [x.key || x.name.toLowerCase(), x]));
     Object.keys(F.plan).filter(d => d >= t).sort().forEach(d => SLOTS.forEach(s => {
-      const m = mealById(F.plan[d][s]); if (!m) return;
-      m.ingredients.forEach(ing => { const k = ing.toLowerCase(), e = map.get(k) || { name: ing, sources: [] }; if (!e.sources.includes(m.name)) e.sources.push(m.name); map.set(k, e); });
+      const m = mealById(F.plan[d][s]); if (m) entries.push({ meal: m, portions: F.planServings[d + '|' + s] || 1 });
     }));
     const manual = F.shopping.filter(x => !x.auto), have = new Set(manual.map(x => x.name.toLowerCase()));
-    F.shopping = manual.concat([...map.entries()].filter(([k]) => !have.has(k)).map(([k, e]) => ({ id: old.get(k) ? old.get(k).id : C.uid(), name: e.name, auto: true, checked: old.get(k) ? old.get(k).checked : false, sources: e.sources.slice(0, 20) })));
+    F.shopping = manual.concat(M.aggregate(entries).filter(e => !have.has(e.text.toLowerCase())).map(e => {
+      const o = old.get(e.key) || old.get(e.text.toLowerCase());
+      return { id: o ? o.id : C.uid(), name: e.text.slice(0, 80), key: e.key, auto: true, checked: o ? o.checked : false, sources: e.sources.slice(0, 20) };
+    }));
   }
   function shop() {
     const L = LB.S.food.shopping, open = L.filter(x => !x.checked), done = L.filter(x => x.checked);
-    let h = `<section class="card" aria-labelledby="shH"><h2 id="shH">🛒 Shopping list</h2>`;
+    let h = `<section class="card" aria-labelledby="shH"><h2 id="shH">ðŸ›’ Shopping list</h2>`;
     h += L.length ? open.concat(done).map(x => LB.ui.editShop === x.id ? `<form class="task" data-s="saveShop" data-id="${x.id}"><label class="sr" for="es">Item</label><input type="text" id="es" name="name" value="${esc(x.name)}" maxlength="80" required><button class="btn sm">Save</button><button type="button" class="btn alt sm" data-a="cancelShop">Cancel</button></form>` :
-      `<div class="task ${x.checked ? 'done' : ''}"><button type="button" class="chk" data-a="toggleShop" data-id="${x.id}" aria-pressed="${x.checked}" aria-label="${x.checked ? 'Untick' : 'Tick'} ${esc(x.name)}">${x.checked ? '✓' : ''}</button><span class="t">${esc(x.name)}${x.sources.length ? `<br><span class="muted small">for ${esc(x.sources.join(', '))}</span>` : ''}</span><span class="acts"><button type="button" class="btn alt sm" data-a="editShop" data-id="${x.id}" aria-label="Edit ${esc(x.name)}">Edit</button><button type="button" class="btn danger sm" data-a="delShop" data-id="${x.id}" aria-label="Delete ${esc(x.name)}">Delete</button></span></div>`).join('') :
-      LB.empty('🛒', 'Shopping list is empty', 'Plan meals for today or later and ingredients appear here automatically. You can also add your own items.');
+      `<div class="task ${x.checked ? 'done' : ''}"><button type="button" class="chk" data-a="toggleShop" data-id="${x.id}" aria-pressed="${x.checked}" aria-label="${x.checked ? 'Untick' : 'Tick'} ${esc(x.name)}">${x.checked ? 'âœ“' : ''}</button><span class="t">${esc(x.name)}${x.sources.length ? `<br><span class="muted small">for ${esc(x.sources.join(', '))}</span>` : ''}</span><span class="acts"><button type="button" class="btn alt sm" data-a="editShop" data-id="${x.id}" aria-label="Edit ${esc(x.name)}">Edit</button><button type="button" class="btn danger sm" data-a="delShop" data-id="${x.id}" aria-label="Delete ${esc(x.name)}">Delete</button></span></div>`).join('') :
+      LB.empty('ðŸ›’', 'Shopping list is empty', 'Plan meals for today or later and ingredients appear here automatically. You can also add your own items.');
     h += `<form class="task" data-s="addShop"><label class="sr" for="shN">New item</label><input type="text" id="shN" name="name" placeholder="Add an item" maxlength="80" required><button class="btn">Add</button></form>
       <div class="row"><button type="button" class="btn alt sm" data-a="refreshShop">Refresh from meal plan</button>${done.length ? '<button type="button" class="btn alt sm" data-a="clearTicked">Remove ticked items</button>' : ''}</div>
-      <p class="muted small">Ingredients are listed per meal (quantities are not calculated). Items you delete may return when the plan changes or you refresh. Editing an item makes it yours, so it stays.</p></section>`;
+      <p class="muted small">Quantities are scaled by the portions you set in the plan and matching ingredients are combined (estimates from per-serving amounts; check pack sizes). Items you delete may return when the plan changes or you refresh. Editing an item makes it yours, so it stays.</p></section>`;
     return h;
   }
   A.toggleShop = el => { const x = LB.S.food.shopping.find(i => i.id === el.dataset.id); if (x) { x.checked = !x.checked; LB.save(); } };
@@ -264,13 +275,13 @@
   }
   function mealCards(list) {
     const S = LB.S;
-    if (!list.length) return LB.empty('🔎', 'No meals match', 'Try a different search or filter.');
+    if (!list.length) return LB.empty('ðŸ”Ž', 'No meals match', 'Try a different search or filter.');
     return list.map(m => {
       const w = warn(m), fav = S.food.favourites.includes(m.id), n = m.nutrition && Object.values(m.nutrition).some(v => v != null) ? m.nutrition : null;
-      return `<section class="card meal"><div class="row between"><b>${esc(m.name)}</b><button type="button" class="btn alt sm" data-a="toggleFav" data-id="${esc(m.id)}" aria-pressed="${fav}" aria-label="${fav ? 'Remove from favourites' : 'Add to favourites'}: ${esc(m.name)}">${fav ? '★' : '☆'}</button></div>
-        <p class="small muted">${esc(m.cuisine)} · ${m.slots.map(cap).join(', ') || 'any meal'}${m.servings ? ' · makes ' + m.servings + ' serving' + (m.servings === 1 ? '' : 's') : ''}</p><p class="small">${esc(m.ingredients.join(', '))}</p>
-        ${n && S.food.prefs.trackCalories ? `<p class="small">Your estimate per serving: ${n.kcal != null ? n.kcal + ' kcal ' : ''}${n.protein != null ? '· protein ' + n.protein + ' g ' : ''}${n.carbs != null ? '· carbs ' + n.carbs + ' g ' : ''}${n.fat != null ? '· fat ' + n.fat + ' g' : ''} <span class="badge">entered by you</span></p>` : ''}
-        ${w.length ? `<p class="note" role="note">⚠ ${esc(w.join('; '))}</p>` : ''}
+      return `<section class="card meal"><div class="row between"><b>${esc(m.name)}</b><button type="button" class="btn alt sm" data-a="toggleFav" data-id="${esc(m.id)}" aria-pressed="${fav}" aria-label="${fav ? 'Remove from favourites' : 'Add to favourites'}: ${esc(m.name)}">${fav ? 'â˜…' : 'â˜†'}</button></div>
+        <p class="small muted">${esc(m.cuisine)} Â· ${m.slots.map(cap).join(', ') || 'any meal'}${m.servings ? ' Â· makes ' + m.servings + ' serving' + (m.servings === 1 ? '' : 's') : ''}</p><p class="small">${esc(m.ingredients.join(', '))}</p>
+        ${n && S.food.prefs.trackCalories ? `<p class="small">Your estimate per serving: ${n.kcal != null ? n.kcal + ' kcal ' : ''}${n.protein != null ? 'Â· protein ' + n.protein + ' g ' : ''}${n.carbs != null ? 'Â· carbs ' + n.carbs + ' g ' : ''}${n.fat != null ? 'Â· fat ' + n.fat + ' g' : ''} <span class="badge">entered by you</span></p>` : ''}
+        ${w.length ? `<p class="note" role="note">âš  ${esc(w.join('; '))}</p>` : ''}
         <div class="row"><button type="button" class="btn sm" data-a="quickLog" data-id="${esc(m.id)}">Add to today's diary</button>${m.builtin ? '' : `<button type="button" class="btn danger sm" data-a="delRecipe" data-id="${esc(m.id)}" aria-label="Delete recipe ${esc(m.name)}">Delete</button>`}</div></section>`;
     }).join('');
   }

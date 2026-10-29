@@ -79,8 +79,8 @@
     const v = await LB.ask({ title: 'Add…', body: '<p class="small muted">What would you like to add?</p>', buttons: [
       { label: '📅 Appointment', value: 'event' }, { label: '💪 Log workout', value: 'workout' }, { label: '🍽️ Add meal', value: 'meal' }, { label: '📝 Task', value: 'task' }, { label: 'Cancel', value: null, cls: 'alt' }] });
     if (v === 'event') { LB.actions.newEvent(); LB.ui.tab = 'events'; LB.render(true); }
-    else if (v === 'workout') { LB.ui.wtab = 'fitness'; LB.ui.focus = '#wk-type'; LB.go('wellness'); }
-    else if (v === 'meal') { LB.ui.wtab = 'food'; LB.ui.ftab = 'diary'; LB.ui.focus = '#fd-name'; LB.go('wellness'); }
+    else if (v === 'workout') { LB.ui.wtab = 'fitness'; LB.ui.showWk = true; LB.ui.focus = '#wk-type'; LB.go('wellness'); }
+    else if (v === 'meal') { LB.ui.wtab = 'food'; LB.ui.ftab = 'diary'; LB.ui.showMeal = true; LB.ui.focus = '#fd-name'; LB.go('wellness'); }
     else if (v === 'task') { LB.ui.focus = '#taskTitle'; LB.render(); }
     return false;
   };
@@ -96,21 +96,19 @@
     h += `<p class="small muted" id="remNote" role="status">🔔 ${esc(LB.rem && LB.rem.deliveryNote ? LB.rem.deliveryNote() : '')} <button type="button" class="btn alt sm" data-a="openSettings">Reminder settings</button></p>`;
     const nowMs = Date.now(), nxt = C.allOccurrences(S, t, C.addDays(t, 120)).filter(o => !o.cancelled && C.startInstant(o) > nowMs - 36e5).sort((a, b) => C.startInstant(a) - C.startInstant(b))[0];
     h += `<section class="card star" aria-labelledby="nxH"><h2 id="nxH">📅 Next appointment</h2>`;
-    h += nxt ? LB.occRow(nxt, { compact: true }) + `<p class="small muted">${esc(countdown(C.startInstant(nxt) - nowMs))}</p>` : LB.empty('📅', 'No appointments coming up', 'Add one and choose reminders so you never miss it.', '<button type="button" class="btn" data-a="newEvent">Add appointment</button>');
+    h += nxt ? LB.occRow(nxt, { compact: true }) + `<p class="small muted">${esc(countdown(C.startInstant(nxt) - nowMs))}</p>` + (up.filter(o => !(o.evId === nxt.evId && o.key === nxt.key)).length ? '<h3>Later this week</h3>' + up.filter(o => !(o.evId === nxt.evId && o.key === nxt.key)).map(o => LB.occRow(o, { compact: true })).join('') : '') + `<button type="button" class="btn alt sm" data-a="go" data-arg="events">See all events</button>` : `<p class="muted small">No appointments coming up. <button type="button" class="btn sm" data-a="newEvent">Add appointment</button></p>`;
     h += '</section>';
     if (over.length) h += `<section class="card" aria-labelledby="ovH"><h2 id="ovH">⏰ Overdue tasks <span class="badge warn">${over.length}</span></h2>${over.map(x => taskRow(x, { move: true, showDate: true })).join('')}</section>`;
-    h += tipsHtml();
+    // suggestions are shown below the daily priorities
     h += `<div class="grid2"><section class="card star" aria-labelledby="priH"><h2 id="priH">⭐ Top 3 priorities <span class="badge">${pri.length}/3</span></h2>`;
-    h += pri.length ? pri.map(x => taskRow(x)).join('') : LB.empty('⭐', 'No priorities yet', 'Pick up to three things that matter most today.');
+    h += pri.length ? pri.map(x => taskRow(x)).join('') : '<p class="muted small">No priorities yet. Pick up to three things that matter most today.</p>';
     h += pri.length < 3 ? `<form class="task" data-s="addTask" data-pri="1"><label class="sr" for="priTitle">New priority</label><input type="text" id="priTitle" name="title" placeholder="Add a priority" maxlength="120" required><button class="btn">Add</button></form>` : '<p class="muted small">All three slots are used.</p>';
     h += `</section><section class="card" aria-labelledby="tkH"><h2 id="tkH">📝 Other tasks</h2>`;
-    h += other.length ? other.map(x => taskRow(x)).join('') : LB.empty('📝', 'Nothing else planned', 'Add a task below, or enjoy a lighter day.');
-    h += `<form class="task" data-s="addTask"><label class="sr" for="taskTitle">New task</label><input type="text" id="taskTitle" name="title" placeholder="Add a task" maxlength="120" required><button class="btn">Add</button></form></section></div>`;
-    h += `<section class="card" aria-labelledby="upH"><h2 id="upH">📅 Upcoming appointments</h2>`;
-    h += up.length ? up.map(o => LB.occRow(o, { compact: true })).join('') + `<button type="button" class="btn alt sm" data-a="go" data-arg="events">See all events</button>` : LB.empty('📅', 'No appointments this week', 'Add one and set reminders so you never miss it.', '<button type="button" class="btn" data-a="newEvent">Add appointment</button>');
+    h += other.length ? other.map(x => taskRow(x)).join('') : '<p class="muted small">Nothing else planned.</p>';
+    h += `<form class="task" data-s="addTask"><label class="sr" for="taskTitle">New task</label><input type="text" id="taskTitle" name="title" placeholder="Add a task" maxlength="120" required><button class="btn">Add</button></form></section></div>`; h += tipsHtml();
     const planned = S.fitness.plan.filter(p => p.day === C.dayOfWeek(t)), mp = S.food.plan[t] || {}, M = window.LBMeals, byId = id => M && M.LIB.concat(S.food.custom).find(x => x.id === id);
     const doneTypes = null, wc = w && C.habitActive(w, t);
-    h += `</section><section class="card" aria-labelledby="tdH"><h2 id="tdH">🗓️ Today's plan</h2>`;
+    h += `<section class="card" aria-labelledby="tdH"><h2 id="tdH">🗓️ Today's plan</h2>`;
     h += planned.length ? planned.map(p => `<div class="task"><span class="t">${esc(p.name || p.type)}${p.minutes ? ' · ' + p.minutes + ' min' : ''}${p.time ? ' · ' + esc(p.time) : ''}</span><span class="acts">${wk.some(x => x.planId === p.id) ? '<span class="badge ok">Done</span>' : `<button type="button" class="btn sm" data-a="logPlanned" data-id="${p.id}">Mark done</button>`}</span></div>`).join('') : '<p class="muted small">No workout planned today. <button type="button" class="btn alt sm" data-a="goWellness" data-arg="fitness">Plan one</button></p>';
     const ml = Object.keys(mp).map(s => { const m = byId(mp[s]); return m ? `<li><b>${esc(s)}</b>: ${esc(m.name)}</li>` : ''; }).join('');
     h += ml ? `<h3>Planned meals</h3><ul class="small">${ml}</ul>` : '<p class="muted small">No meals planned today. <button type="button" class="btn alt sm" data-a="goWellness" data-arg="food">Plan meals</button></p>';
@@ -118,7 +116,7 @@
     h += `</section><section class="card" aria-labelledby="wlH"><h2 id="wlH">💪 Wellness today</h2><div class="stats">
       <div class="stat"><b>${wk.length}</b>workout${wk.length === 1 ? '' : 's'}${wk.length ? ' · ' + wk.reduce((a, x) => a + x.minutes, 0) + ' min' : ''}</div>
       <div class="stat"><b>${meals.length}</b>meal${meals.length === 1 ? '' : 's'} logged</div>
-      <div class="stat"><b>${w && C.habitActive(w, t) ? LB.num(C.habitValue(S, t, w)) + '/' + LB.num(C.goalOn(w, t)) : '–'}</b>water (${w ? esc(w.unit) : ''})</div>
+      
       <div class="stat"><b>${hp == null ? '–' : LB.pct(hp) + '%'}</b>habit progress</div></div>
       <p><button type="button" class="btn alt sm" data-a="goWellness" data-arg="fitness">Fitness</button> <button type="button" class="btn alt sm" data-a="goWellness" data-arg="food">Food</button> <button type="button" class="btn alt sm" data-a="go" data-arg="habits">Habits</button></p></section>`;
     h += `<details class="card"><summary>🗂️ Task history (${hist.length} earlier day${hist.length === 1 ? '' : 's'})</summary>`;

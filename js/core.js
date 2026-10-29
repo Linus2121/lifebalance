@@ -180,7 +180,7 @@
         evId: ev.id, key: orig, date, endDate: addDays(date, span), allDay: ev.allDay, startTime: pick(ex, 'startTime', ev.startTime), endTime: pick(ex, 'endTime', ev.endTime),
         title: ex.title || ev.title, location: pick(ex, 'location', ev.location), notes: pick(ex, 'notes', ev.notes), category: ev.category, tz: ev.tz, endTz: ev.endTz,
         cancelled: !!(ev.cancelled || ex.cancelled), seriesCancelled: !!ev.cancelled, occCancelled: !!ex.cancelled, modified: !!ex.date || (!ex.cancelled && Object.keys(ex).length > 0),
-        recurring: !!ev.recurrence && ev.recurrence.freq !== 'none', bookingRef: ev.bookingRef, contact: ev.contact, hasReminders: (ev.reminders.offsets || []).length > 0,
+        recurring: !!ev.recurrence && ev.recurrence.freq !== 'none', bookingRef: ev.bookingRef, contact: ev.contact, hasReminders: (ev.reminders.offsets || []).length > 0, offsets: ev.reminders.offsets || [],
         returnTime: ev.endTime, returnDate: ev.endDate
       };
     }).filter(o => o.date <= to && o.endDate >= from);
@@ -255,7 +255,7 @@
     return {
       version: 2, tasks: [], habits: builtinHabits(today), logs: {}, journal: [], draft: { mood: null, note: '' }, achievements: {}, events: [],
       fitness: { goals: { weeklyWorkouts: 3, weeklyMinutes: 150, trackWeight: false, targetWeightKg: null }, plan: [], workouts: [], weights: [] },
-      food: { prefs: { diets: [], allergies: [], exclusions: [], trackCalories: false, calorieTarget: null }, diary: {}, plan: {}, custom: [], favourites: [], shopping: [] },
+      food: { prefs: { diets: [], allergies: [], exclusions: [], trackCalories: false, calorieTarget: null }, diary: {}, plan: {}, planServings: {}, custom: [], favourites: [], shopping: [] },
       settings: {
         showDetails: false, defaultOffsets: [1440, 30], fitnessReminders: { enabled: false, lead: 15 },
         mealReminders: { enabled: false, breakfast: '08:00', lunch: '13:00', dinner: '19:00' }, hydrationReminders: { enabled: false, times: ['10:00', '13:00', '16:00'] }
@@ -352,7 +352,9 @@
       nutrition: { kcal: numOr(m.nutrition && m.nutrition.kcal, null, 0, 20000), protein: numOr(m.nutrition && m.nutrition.protein, null, 0, 2000), carbs: numOr(m.nutrition && m.nutrition.carbs, null, 0, 2000), fat: numOr(m.nutrition && m.nutrition.fat, null, 0, 2000) }
     } : null);
     S.food.favourites = strList(fd.favourites, 64, 500);
-    S.food.shopping = list(fd.shopping, warn, s => isObj(s) && str(s.name) ? { id: idOr(s.id), name: str(s.name, 80), auto: !!s.auto, checked: !!s.checked, sources: strList(s.sources, 80, 20) } : null);
+    S.food.shopping = list(fd.shopping, warn, s => isObj(s) && str(s.name) ? { id: idOr(s.id), name: str(s.name, 80), auto: !!s.auto, checked: !!s.checked, sources: strList(s.sources, 80, 20), key: str(s.key, 100) } : null);
+    S.food.planServings = {};
+    if (isObj(fd.planServings)) Object.keys(fd.planServings).slice(0, 5000).forEach(k => { const v = numOr(fd.planServings[k], null, 0.5, 20); if (v !== null && /^\d{4}-\d{2}-\d{2}\|[a-z]+$/.test(k)) S.food.planServings[k] = v; });
     const st = isObj(r.settings) ? r.settings : {}, d = S.settings;
     d.showDetails = !!st.showDetails;
     if (Array.isArray(st.defaultOffsets)) d.defaultOffsets = cleanOffsets(st.defaultOffsets);

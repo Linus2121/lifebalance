@@ -1,4 +1,4 @@
-﻿/* Calendar export: standard .ics file (Google, Outlook, Apple, Thunderbird) plus Google/Outlook web links.
+/* Calendar export: standard .ics file (Google, Outlook, Apple, Thunderbird) plus Google/Outlook web links.
    Recurring events are exported as individual dated occurrences, so one-off changes and cancellations are respected. */
 (function (root) {
   const pad = n => String(n).padStart(2, '0');
@@ -11,7 +11,8 @@
   function details(o) {
     return [o.notes, o.bookingRef ? 'Booking ref: ' + o.bookingRef : '', o.contact && (o.contact.name || o.contact.phone || o.contact.email) ? 'Contact: ' + [o.contact.name, o.contact.phone, o.contact.email].filter(Boolean).join(', ') : ''].filter(Boolean).join('\n');
   }
-  function build(C, occs, nowMs) {
+  function build(C, occs, nowMs, opts) {
+    const alarms = !opts || opts.alarms !== false;
     const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Lamb Technologies//LifeBalance//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
     occs.filter(o => !o.cancelled).forEach(o => {
       L.push('BEGIN:VEVENT', 'UID:' + o.evId + '-' + o.key + '@lifebalance', 'DTSTAMP:' + utc(nowMs));
@@ -23,6 +24,7 @@
       L.push('SUMMARY:' + esc(o.title), 'CATEGORIES:' + esc(o.category));
       if (o.location) L.push('LOCATION:' + esc(o.location));
       const d = details(o); if (d) L.push('DESCRIPTION:' + esc(d));
+      if (alarms) [...new Set((o.offsets || []).map(Number).filter(n => Number.isInteger(n) && n >= 0))].sort((a, b) => a - b).forEach(m => L.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Reminder', 'TRIGGER:-PT' + m + 'M', 'END:VALARM'));
       L.push('END:VEVENT');
     });
     L.push('END:VCALENDAR');

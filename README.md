@@ -51,22 +51,29 @@ Costs: `web-push` is free and browsers' push services are free. You pay only for
     cd server; npm test              # push server
     cd tests; npm i; node e2e.js     # browser tests (needs Chrome; mobile + desktop)
 
-## v3 update (last updated 2026-10-29)
+## v4 update (last updated 2026-10-29)
 
-Added: clearer Today dashboard (next appointment with countdown, priorities, today's workout/meals, water +/-, one "➕ Add" quick menu), installable PWA (manifest, icons, offline app shell), Settings "Install & this device" card (platform install guidance, feature detection, per-device "receives reminders" toggle), and calendar export (.ics download, Google and Outlook links).
+**Added:** simple "Enable reminders" flow with five separate statuses (device support, permission, server connection, scheduling, delivery); server address moved under "Advanced"; the "This device receives reminders" switch also governs snoozes; snooze from a notification works while the app is closed (server-side); cancellations and edits sync to the server; accounts with per-user AES-256-GCM encrypted storage, hourly backups (newest 30), three-way-merge sync with a conflicts list (never silently overwrites) and consented migration of browser data; food audit (ingredient quantities per serving, labels derived from ingredients, uncertain items marked unverified, halal never asserted, no "allergy-safe" claims); portions in the meal plan and a shopping list that combines matching items and scales by portions; .ics export with reminder alarms (VALARM); Today dashboard and Wellness simplified (forms open from "Log workout", "Add meal", "Add to plan", "Edit goals").
+
+### Configuration
+- `config.js`: set `serverUrl` to your deployed server (blank = same origin). Users never see this.
+- Server env: `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` (+ subject), `LB_DATA_KEY` (encryption master key; auto-generated into `server/data/datakey` if unset, so back it up), `ALLOWED_ORIGINS`, `PORT`. Credentials stay on the server.
+- Needs an always-on HTTPS Node host. Cost: hosting (free tiers may sleep and delay reminders) and optionally a domain. Web Push itself is free.
+
+### Test results (Chrome on Windows only)
+core/calendar/merge/food unit tests 34+ pass; server tests 20 pass; smoke and browser e2e (375px and 1280px) pass.
 
 ### Verified vs not verified
 | Item | Status |
 |---|---|
-| Today dashboard, quick add, install card, device toggle, .ics export, offline reload, in-app alert/snooze/dismiss | Automated tests (Chrome on Windows, 375px and 1280px) |
-| Push scheduler logic | Server tests with a fake sender |
-| Real closed-app push on Android, iOS/iPadOS, Windows, macOS, Linux | **Not tested** |
-| Safari, Firefox, Edge | **Not tested** |
-| Accounts, cross-device sync, automatic backups, conflict handling, offline sync queue | **Not built** (manual export/import only) |
-| Ingredient quantities / portion-based shopping lists | **Not built** |
-| Fitness log form hidden behind a button | Not done |
-| Apple Calendar | .ics download only |
-
+| Dashboard, Wellness forms, demo mode, drafts, import/export, undo, .ics (alarms, recurring, cancellations, time zones), offline reload, in-app alert/snooze | Automated tests |
+| Accounts, encrypted storage, revisions/409 conflicts, backups, snooze route, scheduler | Server tests (fake sender) |
+| Three-way merge | Unit tests |
+| Client sync against a live server in a browser, offline-edit then reconnect | **Not tested end to end** |
+| Real closed-app push and "delivery verified" on any OS | **Not verified** (no push service or devices here) |
+| Android, iOS/iPadOS, macOS, Linux, Safari, Firefox, Edge | **Not tested** |
+| Email verification / password reset | **Not built** (forgotten password = data unrecoverable) |
+| Apple Calendar | .ics download only; exports are copies and do not sync |
 ## Known limitations
 
 - Closed-app push is covered by server tests and a mocked client; it has **not** been verified end to end with a real push service or device.
@@ -77,9 +84,9 @@ Added: clearer Today dashboard (next appointment with countdown, priorities, tod
 - Reminders are sent to the server for the next 45 days only (re-synced while the app is used).
 - Edited single occurrences of a recurring event use the series' reminder offsets.
 - Migrated v1 history cannot recover past goal changes.
-- Snooze works only while the app is open.
+- Closed-app snooze needs the server and a verified push subscription; unverified here.
 - iOS needs the app added to the Home Screen for Web Push.
-- Auto-generated shopping items have no computed quantities; deleted auto items may return when the plan changes.
-- Per-device token auth only (no user accounts).
+- Shopping quantities are scaled estimates from per-serving amounts; deleted auto items may return when the plan changes.
+- Accounts exist but are untested on a real host; no email verification or password reset.
 
 Powered by Lamb Technologies
