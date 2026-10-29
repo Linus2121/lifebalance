@@ -190,3 +190,15 @@ footer,footer .small{color:var(--brand)}
 
 @keyframes logo-clockwise{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 header.top .logo{animation:logo-clockwise 6s linear infinite!important;animation-play-state:running!important;transform-origin:50% 50%;will-change:transform}
+
+/* Achievement flip cards - updated 2026-10-29 */
+.achievement-flip{position:relative;display:block;width:100%;min-height:210px;padding:0;border:0;border-radius:20px;background:transparent;color:var(--ink);text-align:center;cursor:pointer;perspective:1000px;font:inherit}
+.flip-inner{display:grid;width:100%;min-height:210px;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.7,.2,1)}
+.achievement-flip.is-flipped .flip-inner{transform:rotateY(180deg)}
+.flip-front,.flip-back{grid-area:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px 14px;border:1px dashed #42606b;border-radius:20px;background:linear-gradient(140deg,#14252d,#0b171d);backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow-wrap:anywhere}
+.flip-front{transform:rotateY(0deg)}.flip-back{transform:rotateY(180deg);background:linear-gradient(140deg,#173337,#102128);border-style:solid;border-color:var(--teal)}
+.achievement-flip.on .flip-front,.achievement-flip.on .flip-back{border:1px solid var(--brand);background:linear-gradient(140deg,#203526,#101f22)}
+.flip-icon{font-size:2rem;line-height:1.2}.flip-status{font-size:.8rem;color:var(--muted)}.achievement-flip.on .flip-status{color:var(--brand)}
+.flip-hint{font-size:.72rem;color:var(--teal);margin-top:auto}.flip-front b,.flip-back b{font-size:1rem}
+.achievement-flip:hover .flip-front{border-color:var(--teal)}.achievement-flip:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
+@media(prefers-reduced-motion:reduce){.flip-inner{transition:none}}

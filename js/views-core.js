@@ -31,6 +31,16 @@
   };
   const tipsHtml = () => '<section class="card" aria-labelledby="tipH"><h2 id="tipH">\ud83d\udca1 Suggestions</h2>' + LB.tips().map(x => '<p class="tip">' + esc(x) + '</p>').join('') + '<p class="muted small">General wellbeing ideas only, not medical advice.</p></section>';
 
+  A.flipAchievement = el => {
+    const flipped = el.classList.toggle('is-flipped');
+    el.setAttribute('aria-pressed', String(flipped));
+    el.querySelector('.flip-front').setAttribute('aria-hidden', String(flipped));
+    el.querySelector('.flip-back').setAttribute('aria-hidden', String(!flipped));
+    const name = el.querySelector('b').textContent;
+    el.setAttribute('aria-label', name + (flipped ? ': return to achievement front' : ': show achievement details'));
+    return false;
+  };
+
   /* ---------- tasks ---------- */
   function taskRow(t, o) {
     o = o || {};
@@ -224,7 +234,7 @@
       <section class="card"><h3>Mood</h3>${bars(mood, lbl, 5, '#c2255c', 'Average mood per day out of 5', v => v.toFixed(1).replace('.0', ''))}</section>
       <section class="card"><h3>Habit streaks</h3>${S.habits.filter(x => C.habitActive(x, t)).map(x => { const s = C.habitStreak(S, x, t); return `<div class="row sp"><span>${x.icon} ${esc(x.name)}</span><b>${s ? '\ud83d\udd25 ' + s + ' day' + (s > 1 ? 's' : '') : '\u2013'}</b></div>`; }).join('')}</section></div>`;
     h += `<details class="card"><summary>View chart data as a table</summary><div style="overflow:auto"><table><caption class="sr">Weekly data</caption><thead><tr><th scope="col">Day</th><th scope="col">Tasks done</th><th scope="col">Habit progress</th><th scope="col">Mood</th></tr></thead><tbody>${days.map((d, i) => `<tr><th scope="row">${LB.fmtDate(d)}</th><td>${done[i]}/${tot[i]}</td><td>${hp[i] == null ? '\u2013' : LB.pct(hp[i]) + '%'}</td><td>${mood[i] == null ? '\u2013' : mood[i].toFixed(1)}</td></tr>`).join('')}</tbody></table></div></details>`;
-    h += `<section class="card"><h2>\ud83c\udfc6 Achievements</h2><p class="muted small">Once earned, achievements are kept.</p><div class="ach">${C.ACHIEVEMENTS.map(a => { const on = S.achievements[a.id]; return `<div class="${on ? 'on' : ''}"><b>${a.icon} ${esc(a.name)}</b><br><span class="small">${esc(a.desc)}</span><br><span class="small ${on ? '' : 'muted'}">${on ? 'Earned ' + LB.fmtDate(on, true) : 'Not yet earned'}</span></div>`; }).join('')}</div></section>`;
+    h += `<section class="card"><h2>\ud83c\udfc6 Achievements</h2><p class="muted small">Once earned, achievements are kept. Tap a card to see its details.</p><div class="ach">${C.ACHIEVEMENTS.map(a => { const on = S.achievements[a.id]; return `<button type="button" class="achievement-flip ${on ? 'on' : ''}" data-a="flipAchievement" aria-pressed="false" aria-label="${esc(a.name)}: show achievement details"><span class="flip-inner"><span class="flip-front"><span class="flip-icon" aria-hidden="true">${a.icon}</span><b>${esc(a.name)}</b><span class="flip-status">${on ? 'Earned' : 'Not yet earned'}</span><span class="flip-hint">Tap for details \u21bb</span></span><span class="flip-back" aria-hidden="true"><b>${esc(a.name)}</b><span>${esc(a.desc)}</span><span class="small">${on ? 'Earned ' + LB.fmtDate(on, true) : 'Complete this goal to unlock your achievement.'}</span><span class="flip-hint">Tap to return \u21bb</span></span></span></button>`; }).join('')}</div></section>`;
     return h;
   };
 })();
