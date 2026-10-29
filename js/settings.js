@@ -22,20 +22,20 @@
   };
   function installSteps(p) {
     if (p.standalone) return 'LifeBalance is running as an installed app.';
-    if (p.os === 'ios') return 'In Safari, tap Share, then “Add to Home Screen”. On iPhone and iPad, push reminders work only from the Home Screen app (iOS/iPadOS 16.4 or later). You can also keep using it in the browser.';
-    if (p.os === 'android') return p.browser === 'Firefox' ? 'In Firefox, open the menu and choose “Install”. You can also keep using the browser.' : 'In Chrome or Edge, open the menu and choose “Install app” or “Add to Home screen”.';
-    if (p.browser === 'Safari') return 'In Safari on Mac, choose File → Add to Dock (macOS Sonoma or later). You can also keep using the browser.';
+    if (p.os === 'ios') return 'In Safari, tap Share, then \u201cAdd to Home Screen\u201d. On iPhone and iPad, push reminders work only from the Home Screen app (iOS/iPadOS 16.4 or later). You can also keep using it in the browser.';
+    if (p.os === 'android') return p.browser === 'Firefox' ? 'In Firefox, open the menu and choose \u201cInstall\u201d. You can also keep using the browser.' : 'In Chrome or Edge, open the menu and choose \u201cInstall app\u201d or \u201cAdd to Home screen\u201d.';
+    if (p.browser === 'Safari') return 'In Safari on Mac, choose File \u2192 Add to Dock (macOS Sonoma or later). You can also keep using the browser.';
     if (p.browser === 'Firefox') return 'Desktop Firefox cannot install web apps. Keep using LifeBalance in a browser tab, or use Chrome or Edge to install it.';
-    return 'Look for the install icon in the address bar, or open the browser menu and choose “Install LifeBalance”. You can also keep using the browser.';
+    return 'Look for the install icon in the address bar, or open the browser menu and choose \u201cInstall LifeBalance\u201d. You can also keep using the browser.';
   }
   function installCard(sp, D) {
-    const p = LB.platform(), yes = '✅', no = '⚠️', recv = D.receive !== false;
+    const p = LB.platform(), yes = '\u2705', no = '\u26a0\ufe0f', recv = D.receive !== false;
     const feat = [['Works offline after first load', sp.sw && sp.secure], ['Browser notifications', sp.notif], ['Closed-app push (needs reminder server)', sp.push && sp.sw && sp.secure]];
-    return `<section class="card" aria-labelledby="inH"><h2 id="inH">📲 Install &amp; this device</h2>
+    return `<section class="card" aria-labelledby="inH"><h2 id="inH">\ud83d\udcf2 Install &amp; this device</h2>
       <p class="small">${esc(installSteps(p))}</p>
       ${installEvt ? '<button type="button" class="btn" data-a="installApp">Install LifeBalance</button>' : ''}
       <ul class="small">${feat.map(f => `<li>${f[1] ? yes : no} ${esc(f[0])}: ${f[1] ? 'available' : 'not available here'}</li>`).join('')}</ul>
-      ${!sp.secure ? '<p class="note">This page is not secure (HTTPS or localhost is required for install, offline use and push). Your data still works in the browser; use “Export to calendar” for appointments.</p>' : ''}
+      ${!sp.secure ? '<p class="note">This page is not secure (HTTPS or localhost is required for install, offline use and push). Your data still works in the browser; use \u201cExport to calendar\u201d for appointments.</p>' : ''}
       <label class="check"><input type="checkbox" data-c="receive" ${recv ? 'checked' : ''}> This device receives reminders</label>
       <p class="muted small">Turn this off on devices where you do not want alerts. It only affects this device. If several devices alert you at once, each device shows one alert per reminder (repeat alerts for the same reminder replace each other).</p>
       <div class="row"><button type="button" class="btn alt" data-a="exportIcs">Export all upcoming events (.ics)</button></div>
@@ -62,46 +62,46 @@
 
   V.settings = function () {
     const S = LB.personal, rem = LB.rem, sp = rem.supported(), perm = rem.perm(), P = D.push;
-    let h = `<div class="row between"><h2 id="setH" tabindex="-1" style="margin:0">⚙️ Settings</h2><button type="button" class="btn alt sm" data-a="closeSettings">← Back</button></div>`;
+    let h = `<div class="row between"><h2 id="setH" tabindex="-1" style="margin:0">\u2699\ufe0f Settings</h2><button type="button" class="btn alt sm" data-a="closeSettings">\u2190 Back</button></div>`;
     if (LB.D.demo) h += '<div class="note" role="note">Demo mode is on. Settings below that change your data affect your own data, not the demo.</div>';
 
-    h += `<section class="card" id="alertsCard" tabindex="-1" aria-labelledby="alH"><h2 id="alH">🔔 Alerts</h2>`;
+    h += `<section class="card" id="alertsCard" tabindex="-1" aria-labelledby="alH"><h2 id="alH">\ud83d\udd14 Alerts</h2>`;
     h += D.alerts.length ? D.alerts.map(a => `<div class="alert"><b>${esc(a.title)}</b><span>${esc(a.body)}</span><div class="row"><button type="button" class="btn sm" data-a="snooze" data-id="${esc(a.id)}" data-arg="10">Snooze 10 min</button><button type="button" class="btn danger sm" data-a="dismiss" data-id="${esc(a.id)}">Dismiss</button></div></div>`).join('') + '<button type="button" class="btn alt sm" data-a="dismissAll">Dismiss all</button>' : '<p class="muted">No active alerts.</p>';
     h += '</section>';
 
-    const st = rem.statuses(), mark = o => o === true ? '✅' : o === false ? '⚠️' : '•';
-    h += `<section class="card" aria-labelledby="ntH"><h2 id="ntH">🔔 Reminders</h2>
-      <p class="small">Reminders always appear inside the app while it is open. “Enable reminders” also sets up alerts for when the app is closed, if a reminder service is connected.</p>
+    const st = rem.statuses(), mark = o => o === true ? '\u2705' : o === false ? '\u26a0\ufe0f' : '\u2022';
+    h += `<section class="card" aria-labelledby="ntH"><h2 id="ntH">\ud83d\udd14 Reminders</h2>
+      <p class="small">Reminders always appear inside the app while it is open. \u201cEnable reminders\u201d also sets up alerts for when the app is closed, if a reminder service is connected.</p>
       <dl class="kv"><dt>Device support</dt><dd>${mark(st.device.ok)} ${esc(st.device.text)}</dd><dt>Permission</dt><dd>${mark(st.permission.ok)} ${esc(st.permission.text)}</dd><dt>Server connection</dt><dd>${mark(st.server.ok)} ${esc(st.server.text)}</dd><dt>Scheduling</dt><dd>${mark(st.scheduling.ok)} ${esc(st.scheduling.text)}</dd><dt>Delivery</dt><dd>${mark(st.delivery.ok)} ${esc(st.delivery.text)}</dd></dl>`;
     if (P.error) h += `<p class="err" role="alert">${esc(P.error)}</p>`;
     h += '<div class="row">' + (P.enabled ? '<button type="button" class="btn" data-a="testPush">Send test to this device</button><button type="button" class="btn alt" data-a="retryPush">Retry sync</button><button type="button" class="btn danger" data-a="disablePush">Turn off closed-app reminders</button>' : '<button type="button" class="btn" data-a="enableReminders">Enable reminders</button>') + '<button type="button" class="btn alt" data-a="testAlert">Test in-app alert</button></div>';
     if (perm === 'denied') h += '<p class="note">Notifications are blocked. Allow them for this site in your browser settings, then reload.</p>';
-    h += `<p class="muted small">Limits: closed-app reminders need HTTPS, notification permission and a connected reminder service that is always on. “Verified” appears only after a real test message reaches this device. The service stores reminder times and short text (generic by default) against a random device token. Snooze from a notification works while the app is closed when the service is connected. iPhone and iPad need the app added to the Home Screen. Reminders more than 45 days ahead are sent when you next open the app.</p>
+    h += `<p class="muted small">Limits: closed-app reminders need HTTPS, notification permission and a connected reminder service that is always on. \u201cVerified\u201d appears only after a real test message reaches this device. The service stores reminder times and short text (generic by default) against a random device token. Snooze from a notification works while the app is closed when the service is connected. iPhone and iPad need the app added to the Home Screen. Reminders more than 45 days ahead are sent when you next open the app.</p>
       <details><summary>Advanced: self-hosted server</summary><p class="small">The server address is set by whoever deploys the app (<code>config.js</code>). Use this only if you run your own server.</p>
       <label for="srv">Server address (blank = same site)</label><input type="url" id="srv" value="${esc(D.serverUrl)}" data-i="serverUrl" placeholder="https://your-server.example.com" inputmode="url"></details></section>`;
     h += LB.sync ? LB.sync.card() : '';
 
     h += installCard(sp, D);
 
-    h += `<section class="card" aria-labelledby="pvH"><h2 id="pvH">🔒 Privacy</h2><form data-s="savePrivacy">
+    h += `<section class="card" aria-labelledby="pvH"><h2 id="pvH">\ud83d\udd12 Privacy</h2><form data-s="savePrivacy">
       <label class="check"><input type="checkbox" name="sd" ${S.settings.showDetails ? 'checked' : ''}> Show appointment, workout and meal details in notification previews</label>
-      <p class="muted small">Off by default. When off, notifications only say “You have a reminder.” so details are not shown on a lock screen. The in-app alert tray always shows details because you are looking at the app. Turning this on sends detailed text to your reminder server if you use one.</p>
+      <p class="muted small">Off by default. When off, notifications only say \u201cYou have a reminder.\u201d so details are not shown on a lock screen. The in-app alert tray always shows details because you are looking at the app. Turning this on sends detailed text to your reminder server if you use one.</p>
       <fieldset><legend>Default reminders for new appointments</legend>${C.PRESET_OFFSETS.map(o => `<label class="check inline"><input type="checkbox" name="o${o.min}" ${S.settings.defaultOffsets.includes(o.min) ? 'checked' : ''}> ${esc(o.label)}</label>`).join(' ')}</fieldset>
       <p><button class="btn">Save</button></p></form>
       <p class="small"><b>Where is my data?</b> Everything (tasks, habits, journal, appointments, fitness and food) is stored in this browser on this device (localStorage). Nothing is uploaded unless you (a) sign in to sync, which stores an encrypted copy on the sync server, or (b) enable closed-app reminders, which sends reminder times and short text. Clearing browser data erases the local copy, so export a backup regularly.</p></section>`;
 
     const bi = LB.getBackup(K.BK_IMPORT), bc = LB.getBackup(K.BK_CLEAR);
-    h += `<section class="card" aria-labelledby="dtH"><h2 id="dtH">💾 Your data</h2>
-      <div class="row"><button type="button" class="btn" data-a="exportData">Export backup (JSON)</button><button type="button" class="btn alt" data-a="pickImport">Import backup…</button><input type="file" id="impFile" accept="application/json,.json" data-c="importFile" class="sr" tabindex="-1" aria-label="Choose backup file"></div>
+    h += `<section class="card" aria-labelledby="dtH"><h2 id="dtH">\ud83d\udcbe Your data</h2>
+      <div class="row"><button type="button" class="btn" data-a="exportData">Export backup (JSON)</button><button type="button" class="btn alt" data-a="pickImport">Import backup\u2026</button><input type="file" id="impFile" accept="application/json,.json" data-c="importFile" class="sr" tabindex="-1" aria-label="Choose backup file"></div>
       <p class="muted small">Backups contain private health and journal information. Keep the file somewhere safe. Importing replaces your current data after you confirm, and a copy of what you had is kept so you can restore it.</p>
       ${bi ? `<p class="small">Before your last import: backup from ${esc(when(bi.at))} <button type="button" class="btn alt sm" data-a="restoreBk" data-arg="import">Restore it</button></p>` : ''}
       ${bc ? `<p class="small">Before you last cleared data: backup from ${esc(when(bc.at))} <button type="button" class="btn alt sm" data-a="restoreBk" data-arg="clear">Restore it</button></p>` : ''}
-      <div class="row"><button type="button" class="btn danger" data-a="clearAll">Clear all my data…</button></div></section>`;
+      <div class="row"><button type="button" class="btn danger" data-a="clearAll">Clear all my data\u2026</button></div></section>`;
 
-    h += `<section class="card" aria-labelledby="dmH"><h2 id="dmH">🧪 Demo mode</h2><p class="small">Try the app with sample data. Demo data is kept separately and never changes or overwrites your own data.</p>
+    h += `<section class="card" aria-labelledby="dmH"><h2 id="dmH">\ud83e\uddea Demo mode</h2><p class="small">Try the app with sample data. Demo data is kept separately and never changes or overwrites your own data.</p>
       <div class="row">${LB.D.demo ? '<button type="button" class="btn" data-a="exitDemo">Exit demo</button><button type="button" class="btn alt" data-a="resetDemo">Reset demo data</button>' : '<button type="button" class="btn" data-a="enterDemoA">Start demo mode</button>'}</div></section>`;
 
-    h += `<section class="card" aria-labelledby="abH"><h2 id="abH">About</h2><p class="small">LifeBalance · last updated ${C.APP_UPDATED}. LifeBalance gives general wellbeing information and is not medical advice. Steps, wearables and food photos are not supported; all fitness and food logging is manual.</p></section>`;
+    h += `<section class="card" aria-labelledby="abH"><h2 id="abH">About</h2><p class="small">LifeBalance \u00b7 last updated ${C.APP_UPDATED}. LifeBalance gives general wellbeing information and is not medical advice. Steps, wearables and food photos are not supported; all fitness and food logging is manual.</p></section>`;
     return h;
   };
 

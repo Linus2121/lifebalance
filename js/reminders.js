@@ -67,7 +67,7 @@
   function renderAlerts() {
     const el = document.getElementById('alerts'); if (!el) return;
     const list = D.alerts.slice(0, 3);
-    el.innerHTML = list.map(a => `<div class="alert" role="alert"><b>🔔 ${esc(a.title)}</b><span>${esc(a.body)}${a.late ? ' (earlier)' : ''}</span><div class="row" style="margin-top:8px"><button type="button" class="btn sm" data-a="snooze" data-id="${esc(a.id)}" data-arg="10">Snooze 10 min</button><button type="button" class="btn alt sm" data-a="snooze" data-id="${esc(a.id)}" data-arg="60">1 hour</button><button type="button" class="btn danger sm" data-a="dismiss" data-id="${esc(a.id)}">Dismiss</button></div></div>`).join('') +
+    el.innerHTML = list.map(a => `<div class="alert" role="alert"><b>\ud83d\udd14 ${esc(a.title)}</b><span>${esc(a.body)}${a.late ? ' (earlier)' : ''}</span><div class="row" style="margin-top:8px"><button type="button" class="btn sm" data-a="snooze" data-id="${esc(a.id)}" data-arg="10">Snooze 10 min</button><button type="button" class="btn alt sm" data-a="snooze" data-id="${esc(a.id)}" data-arg="60">1 hour</button><button type="button" class="btn danger sm" data-a="dismiss" data-id="${esc(a.id)}">Dismiss</button></div></div>`).join('') +
       (D.alerts.length > 3 ? `<div class="alert"><span>${D.alerts.length - 3} more alert${D.alerts.length - 3 > 1 ? 's' : ''}</span> <button type="button" class="btn alt sm" data-a="dismissAll">Dismiss all</button></div>` : '');
     const b = document.getElementById('bellCount'); if (b) { b.textContent = D.alerts.length; b.hidden = !D.alerts.length; }
   }
@@ -93,7 +93,7 @@
     let p = Notification.permission;
     if (p === 'default') p = await Notification.requestPermission();
     D.notifEnabled = p === 'granted'; LB.saveD();
-    LB.toast(p === 'granted' ? 'Browser notifications enabled.' : p === 'denied' ? 'Notifications are blocked. Allow them in your browser’s site settings, then try again.' : 'Permission was not given.');
+    LB.toast(p === 'granted' ? 'Browser notifications enabled.' : p === 'denied' ? 'Notifications are blocked. Allow them in your browser\u2019s site settings, then try again.' : 'Permission was not given.');
   };
   A.enableNotif = async () => { await R.enableNotifications(); };
   A.disableNotif = () => { D.notifEnabled = false; LB.saveD(); LB.toast('Browser notifications turned off. In-app alerts remain.'); };
@@ -127,7 +127,7 @@
     else device = { ok: true, text: 'Supported' };
     const permission = perm === 'granted' ? { ok: true, text: 'Allowed' } : perm === 'denied' ? { ok: false, text: 'Blocked. Allow notifications for this site in your browser settings.' } : perm === 'unsupported' ? { ok: false, text: 'Not supported' } : { ok: null, text: 'Not asked yet' };
     const server = S.status === 'ok' ? { ok: true, text: 'Connected' + (S.at ? ' (' + new Date(S.at).toLocaleTimeString() + ')' : '') } : S.status === 'none' ? { ok: false, text: 'No reminder service is connected to this site' } : S.status === 'failed' ? { ok: false, text: 'Not reachable: ' + S.error } : { ok: null, text: 'Not checked yet' };
-    const scheduling = D.receive === false ? { ok: null, text: 'Off: this device is set not to receive reminders' } : P.status === 'ok' ? { ok: true, text: 'Confirmed by the server: ' + P.count + ' upcoming reminder' + (P.count === 1 ? '' : 's') } : P.status === 'syncing' ? { ok: null, text: 'Setting up…' } : P.status === 'failed' ? { ok: false, text: P.error || 'Failed' } : { ok: null, text: 'Not set up' };
+    const scheduling = D.receive === false ? { ok: null, text: 'Off: this device is set not to receive reminders' } : P.status === 'ok' ? { ok: true, text: 'Confirmed by the server: ' + P.count + ' upcoming reminder' + (P.count === 1 ? '' : 's') } : P.status === 'syncing' ? { ok: null, text: 'Setting up\u2026' } : P.status === 'failed' ? { ok: false, text: P.error || 'Failed' } : { ok: null, text: 'Not set up' };
     const delivery = P.verifiedAt ? { ok: true, text: 'Verified: a test message reached this device on ' + new Date(P.verifiedAt).toLocaleString() } : P.testSentAt ? { ok: false, text: 'A test was sent but this device did not confirm receiving it. Closed-app delivery is not verified.' } : { ok: null, text: 'Not verified. Send a test to confirm.' };
     if (P.serverFailures) delivery.text += ' The server reports ' + P.serverFailures + ' failed delivery attempt' + (P.serverFailures === 1 ? '' : 's') + (P.serverLastError ? ' (last error: ' + P.serverLastError + ')' : '') + '.';
     return { device, permission, server, scheduling, delivery };
@@ -214,14 +214,14 @@
       try { const s = await (await api('/api/status')).json(); D.push.serverFailures = s.failures || 0; D.push.serverLastError = s.lastError || ''; } catch (e) { /* status is best effort */ }
       setPush('ok', '', j.scheduled);
     } catch (e) {
-      if (e.status === 401 || e.status === 403) { D.push.enabled = false; setPush('failed', 'The server no longer recognises this device. Press “Enable reminders” again.'); return; }
+      if (e.status === 401 || e.status === 403) { D.push.enabled = false; setPush('failed', 'The server no longer recognises this device. Press \u201cEnable reminders\u201d again.'); return; }
       setPush('failed', 'Scheduling failed: ' + (e.message || e) + '. Retrying automatically.'); retryTimer = setTimeout(R.sync, retryMs); retryMs = Math.min(retryMs * 2, 900000);
     }
   };
   A.enableReminders = async () => { await R.enableReminders(); return true; };
   A.testPush = async () => {
-    if (!D.push.enabled) { LB.toast('Press “Enable reminders” first.'); return false; }
-    LB.toast('Sending a test message through the server…');
+    if (!D.push.enabled) { LB.toast('Press \u201cEnable reminders\u201d first.'); return false; }
+    LB.toast('Sending a test message through the server\u2026');
     const r = await R.verifyDelivery();
     LB.toast(r.ok ? 'Verified: the test message reached this device.' : 'Not verified: ' + (r.error || 'the device did not confirm receiving the test message') + '.');
     LB.render(); return false;
@@ -232,8 +232,8 @@
 
   R.deliveryNote = () => {
     if (D.receive === false) return 'This device is set not to receive reminders (Settings).';
-    if (D.push.status === 'ok') return D.push.verifiedAt ? `Closed-app reminders: ${D.push.count} upcoming confirmed by the server; delivery verified on this device.` : `Closed-app reminders: ${D.push.count} upcoming confirmed by the server, but delivery has not been verified yet (Settings → Send test).`;
+    if (D.push.status === 'ok') return D.push.verifiedAt ? `Closed-app reminders: ${D.push.count} upcoming confirmed by the server; delivery verified on this device.` : `Closed-app reminders: ${D.push.count} upcoming confirmed by the server, but delivery has not been verified yet (Settings \u2192 Send test).`;
     if (D.push.status === 'failed') return 'Closed-app reminders are not working (' + D.push.error + '). Alerts still appear while the app is open.';
-    return 'Alerts appear while LifeBalance is open. Turn on “Enable reminders” in Settings for closed-app alerts.';
+    return 'Alerts appear while LifeBalance is open. Turn on \u201cEnable reminders\u201d in Settings for closed-app alerts.';
   };
 })();

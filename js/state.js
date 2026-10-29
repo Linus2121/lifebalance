@@ -60,7 +60,7 @@
   LB.save = () => {
     const fresh = C.updateAchievements(LB.S, LB.today());
     LB.persist();
-    if (fresh.length) LB.toast('🏆 Achievement unlocked: ' + fresh.map(a => a.name).join(', '));
+    if (fresh.length) LB.toast('\ud83c\udfc6 Achievement unlocked: ' + fresh.map(a => a.name).join(', '));
     if (!LB.D.demo && LB.rem) LB.rem.syncSoon();
   };
 
@@ -113,7 +113,7 @@
   };
 
   /* ---------- rendering ---------- */
-  const TABS = [['today', '🏠', 'Today'], ['habits', '✅', 'Habits'], ['journal', '📔', 'Journal'], ['events', '📅', 'Events'], ['wellness', '💪', 'Wellness'], ['progress', '📊', 'Progress']];
+  const TABS = [['today', '\ud83c\udfe0', 'Today'], ['habits', '\u2705', 'Habits'], ['journal', '\ud83d\udcd4', 'Journal'], ['events', '\ud83d\udcc5', 'Events'], ['wellness', '\ud83d\udcaa', 'Wellness'], ['progress', '\ud83d\udcca', 'Progress']];
   LB.go = tab => { LB.ui.tab = tab; LB.ui.view = null; LB.render(true); };
   LB.render = top => {
     const app = document.getElementById('app'), y = window.scrollY;
@@ -122,7 +122,7 @@
     catch (e) { console.error(e); app.innerHTML = '<div class="card err" role="alert">Something went wrong showing this page. Your data is safe. <button class="btn sm" data-a="go" data-arg="today">Go to Today</button></div>'; }
     document.getElementById('tabs').innerHTML = TABS.map(t => '<button type="button" data-a="go" data-arg="' + t[0] + '"' + (LB.ui.tab === t[0] ? ' aria-current="page"' : '') + '><span class="ic" aria-hidden="true">' + t[1] + '</span>' + t[2] + '</button>').join('');
     document.getElementById('demoBar').hidden = !LB.D.demo;
-    document.getElementById('demoBar').innerHTML = LB.D.demo ? '🧪 <b>Demo mode</b> – sample data only. Your own data is untouched. <button type="button" class="btn sm" data-a="exitDemo">Exit demo</button>' : '';
+    document.getElementById('demoBar').innerHTML = LB.D.demo ? '\ud83e\uddea <b>Demo mode</b> \u2013 sample data only. Your own data is untouched. <button type="button" class="btn sm" data-a="exitDemo">Exit demo</button>' : '';
     LB.hooks.forEach(h => h());
     window.scrollTo(0, top ? 0 : y);
   };

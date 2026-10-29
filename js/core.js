@@ -6,7 +6,7 @@
   'use strict';
 
   const CATS = ['General', 'School', 'GP', 'Hospital', 'Meetings', 'Weddings', 'Travel', 'Other'];
-  const CAT_ICONS = { General: '📌', School: '🎓', GP: '🩺', Hospital: '🏥', Meetings: '👥', Weddings: '💍', Travel: '✈️', Other: '🗂️' };
+  const CAT_ICONS = { General: '\ud83d\udccc', School: '\ud83c\udf93', GP: '\ud83e\ude7a', Hospital: '\ud83c\udfe5', Meetings: '\ud83d\udc65', Weddings: '\ud83d\udc8d', Travel: '\u2708\ufe0f', Other: '\ud83d\uddc2\ufe0f' };
   const PRESET_OFFSETS = [
     { min: 20160, label: '14 days before' }, { min: 10080, label: '7 days before' }, { min: 4320, label: '3 days before' },
     { min: 1440, label: '1 day before' }, { min: 120, label: '2 hours before' }, { min: 30, label: '30 minutes before' },
@@ -89,8 +89,8 @@
   /* ---------- habits (history-aware) ---------- */
   function builtinHabits(createdAt) {
     const mk = (id, name, icon, unit, goal, step, color) => ({ id, name, icon, unit, goal, step, color, builtin: true, createdAt, archivedAt: '', goalHistory: [{ from: createdAt, goal }] });
-    return [mk('water', 'Water', '💧', 'glasses', 8, 1, '#1c7ed6'), mk('walk', 'Walking', '🚶', 'min', 30, 5, '#0e9f8e'),
-      mk('exercise', 'Exercise', '🏋️', 'min', 30, 5, '#c2255c'), mk('read', 'Reading', '📖', 'min', 20, 5, '#b36200'), mk('sleep', 'Sleep', '😴', 'hours', 8, 0.5, '#6c4cf1')];
+    return [mk('water', 'Water', '\ud83d\udca7', 'glasses', 8, 1, '#1c7ed6'), mk('walk', 'Walking', '\ud83d\udeb6', 'min', 30, 5, '#0e9f8e'),
+      mk('exercise', 'Exercise', '\ud83c\udfcb\ufe0f', 'min', 30, 5, '#c2255c'), mk('read', 'Reading', '\ud83d\udcd6', 'min', 20, 5, '#b36200'), mk('sleep', 'Sleep', '\ud83d\ude34', 'hours', 8, 0.5, '#6c4cf1')];
   }
   const habitActive = (h, d) => d >= (h.createdAt || '0000-01-01') && (!h.archivedAt || d < h.archivedAt);
   function goalOn(h, d) {
@@ -137,16 +137,16 @@
 
   /* ---------- achievements ---------- */
   const ACHIEVEMENTS = [
-    { id: 'first', icon: '✅', name: 'First step', desc: 'Complete a task', test: S => S.tasks.some(t => t.done) },
-    { id: 'triple', icon: '⭐', name: 'Triple focus', desc: 'Finish 3 priorities in a day', test: S => [...new Set(S.tasks.map(t => t.date))].some(d => dayTasks(S, d).filter(t => t.priority && t.done).length >= 3) },
-    { id: 'water', icon: '💧', name: 'Hydrated', desc: 'Reach your water goal', test: S => Object.keys(S.logs).some(d => S.habits.some(h => h.id === 'water' && habitActive(h, d) && habitValue(S, d, h) >= goalOn(h, d))) },
-    { id: 'roll', icon: '🔥', name: 'On a roll', desc: '3-day streak on any habit', test: (S, t) => S.habits.some(h => habitStreak(S, h, t) >= 3) },
-    { id: 'week', icon: '🏆', name: 'Week warrior', desc: '7-day streak on any habit', test: (S, t) => S.habits.some(h => habitStreak(S, h, t) >= 7) },
-    { id: 'all', icon: '🌈', name: 'All-rounder', desc: 'Hit every habit goal in one day', test: S => Object.keys(S.logs).concat(S.fitness.workouts.map(w => w.date)).some(d => { const a = S.habits.filter(h => habitActive(h, d)); return a.length > 0 && a.every(h => habitValue(S, d, h) >= goalOn(h, d)); }) },
-    { id: 'reflect', icon: '📔', name: 'Reflective', desc: 'Write 3 journal entries', test: S => S.journal.length >= 3 },
-    { id: 'planner', icon: '📅', name: 'Planner', desc: 'Add an appointment', test: S => S.events.length > 0 },
-    { id: 'mover', icon: '🏃', name: 'Mover', desc: 'Log a workout', test: S => S.fitness.workouts.length > 0 },
-    { id: 'nourish', icon: '🥗', name: 'Nourished', desc: 'Log a meal', test: S => Object.values(S.food.diary).some(a => a.length > 0) }];
+    { id: 'first', icon: '\u2705', name: 'First step', desc: 'Complete a task', test: S => S.tasks.some(t => t.done) },
+    { id: 'triple', icon: '\u2b50', name: 'Triple focus', desc: 'Finish 3 priorities in a day', test: S => [...new Set(S.tasks.map(t => t.date))].some(d => dayTasks(S, d).filter(t => t.priority && t.done).length >= 3) },
+    { id: 'water', icon: '\ud83d\udca7', name: 'Hydrated', desc: 'Reach your water goal', test: S => Object.keys(S.logs).some(d => S.habits.some(h => h.id === 'water' && habitActive(h, d) && habitValue(S, d, h) >= goalOn(h, d))) },
+    { id: 'roll', icon: '\ud83d\udd25', name: 'On a roll', desc: '3-day streak on any habit', test: (S, t) => S.habits.some(h => habitStreak(S, h, t) >= 3) },
+    { id: 'week', icon: '\ud83c\udfc6', name: 'Week warrior', desc: '7-day streak on any habit', test: (S, t) => S.habits.some(h => habitStreak(S, h, t) >= 7) },
+    { id: 'all', icon: '\ud83c\udf08', name: 'All-rounder', desc: 'Hit every habit goal in one day', test: S => Object.keys(S.logs).concat(S.fitness.workouts.map(w => w.date)).some(d => { const a = S.habits.filter(h => habitActive(h, d)); return a.length > 0 && a.every(h => habitValue(S, d, h) >= goalOn(h, d)); }) },
+    { id: 'reflect', icon: '\ud83d\udcd4', name: 'Reflective', desc: 'Write 3 journal entries', test: S => S.journal.length >= 3 },
+    { id: 'planner', icon: '\ud83d\udcc5', name: 'Planner', desc: 'Add an appointment', test: S => S.events.length > 0 },
+    { id: 'mover', icon: '\ud83c\udfc3', name: 'Mover', desc: 'Log a workout', test: S => S.fitness.workouts.length > 0 },
+    { id: 'nourish', icon: '\ud83e\udd57', name: 'Nourished', desc: 'Log a meal', test: S => Object.values(S.food.diary).some(a => a.length > 0) }];
   // Adds newly earned achievements; never removes any. Returns the new ones.
   function updateAchievements(S, today) {
     const fresh = [];
@@ -243,7 +243,7 @@
   function fullReminderText(r, tz) {
     if (r.kind === 'event') {
       const when = new Date(r.at + r.offset * 60000).toLocaleString(undefined, { timeZone: r.occ.tz || tz, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
-      return { title: r.title, body: r.offset === 0 ? 'Starting now' : `Starts in ${offsetPhrase(r.offset)} · ${r.occ.allDay ? 'all day' : when}` };
+      return { title: r.title, body: r.offset === 0 ? 'Starting now' : `Starts in ${offsetPhrase(r.offset)} \u00b7 ${r.occ.allDay ? 'all day' : when}` };
     }
     if (r.kind === 'fitness') return { title: 'Workout reminder', body: `Time for: ${r.title}` };
     if (r.kind === 'meal') return { title: 'Meal reminder', body: `Time for ${r.title}` };
@@ -322,7 +322,7 @@
         const goal = numOr(h.goal, 1, 0.01, 100000), createdAt = dateOr(h.createdAt, earliest);
         let gh = Array.isArray(h.goalHistory) ? h.goalHistory.filter(e => isObj(e) && isDate(e.from) && numOr(e.goal, 0, 0.01) > 0).map(e => ({ from: e.from, goal: +e.goal })) : [];
         if (!gh.length) gh = [{ from: createdAt, goal }];
-        return { id: h.id, name: str(h.name, 30), icon: str(h.icon, 4) || '⭐', unit: str(h.unit, 15) || 'times', goal, step: numOr(h.step, 1, 0.01, 1000), color: /^#[0-9a-f]{6}$/i.test(h.color) ? h.color : '#6c4cf1', builtin: !!h.builtin, createdAt, archivedAt: dateOr(h.archivedAt, ''), goalHistory: gh };
+        return { id: h.id, name: str(h.name, 30), icon: str(h.icon, 4) || '\u2b50', unit: str(h.unit, 15) || 'times', goal, step: numOr(h.step, 1, 0.01, 1000), color: /^#[0-9a-f]{6}$/i.test(h.color) ? h.color : '#6c4cf1', builtin: !!h.builtin, createdAt, archivedAt: dateOr(h.archivedAt, ''), goalHistory: gh };
       });
     } else S.habits = builtinHabits(earliest);
     S.achievements = {};
@@ -408,7 +408,7 @@
     s.events = [
       cleanEvent({ id: id(), title: 'GP check-up', category: 'GP', date: addDays(t, 2), startTime: '10:30', endTime: '11:00', tz: 'UTC', location: 'Riverside Clinic', reminders: { offsets: [1440, 120] } }),
       cleanEvent({ id: id(), title: 'Team meeting', category: 'Meetings', date: addDays(t, 1), startTime: '09:00', endTime: '09:30', tz: 'UTC', recurrence: { freq: 'weekly', interval: 1 }, reminders: { offsets: [30] } }),
-      cleanEvent({ id: id(), title: 'Cousin’s wedding', category: 'Weddings', date: addDays(t, 20), allDay: true, tz: 'UTC', reminders: { offsets: [10080, 1440] } })];
+      cleanEvent({ id: id(), title: 'Cousin\u2019s wedding', category: 'Weddings', date: addDays(t, 20), allDay: true, tz: 'UTC', reminders: { offsets: [10080, 1440] } })];
     s.fitness.plan = [{ id: id(), day: 1, type: 'gym', name: 'Upper body', minutes: 45, time: '18:00' }, { id: id(), day: 4, type: 'running', name: '', minutes: 30, time: '07:00' }];
     return s;
   }

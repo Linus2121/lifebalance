@@ -10,7 +10,7 @@
   const getBase = () => { try { return JSON.parse(localStorage.getItem(BASE_KEY)) || {}; } catch (e) { return {}; } };
   const setBase = v => { try { localStorage.setItem(BASE_KEY, JSON.stringify(v)); } catch (e) { /* base is best effort */ } };
   const status = (st, err) => { D.sync.status = st; D.sync.error = err || ''; if (st === 'ok') D.sync.lastAt = Date.now(); LB.saveD(); footer(); if (LB.ui.view === 'settings' && !document.activeElement.matches('input')) LB.render(); };
-  const footer = () => { const el = document.querySelector('footer .small'); if (el) el.textContent = 'Last updated ' + C.APP_UPDATED + (D.account ? ' · Signed in: your data is also stored, encrypted, on the sync server' : ' · Your data stays on this device'); };
+  const footer = () => { const el = document.querySelector('footer .small'); if (el) el.textContent = 'Last updated ' + C.APP_UPDATED + (D.account ? ' \u00b7 Signed in: your data is also stored, encrypted, on the sync server' : ' \u00b7 Your data stays on this device'); };
 
   async function call(path, method, body) {
     const h = { 'Content-Type': 'application/json' }; if (D.account) h.Authorization = 'Bearer ' + D.account.token;
@@ -78,7 +78,7 @@
     D.sync.rev = g.j.rev;
     if (!cloud) {
       if (hasLocal) {
-        const ok = await LB.ask({ title: 'Upload this browser’s data?', body: '<p>Your cloud account is empty. Upload the data on this device so it is available on your other devices? It is stored encrypted on the sync server. This browser’s copy is not changed.</p>', buttons: [{ label: 'Upload my data', value: true }, { label: 'Not now (sign out)', value: false, cls: 'alt' }] });
+        const ok = await LB.ask({ title: 'Upload this browser\u2019s data?', body: '<p>Your cloud account is empty. Upload the data on this device so it is available on your other devices? It is stored encrypted on the sync server. This browser\u2019s copy is not changed.</p>', buttons: [{ label: 'Upload my data', value: true }, { label: 'Not now (sign out)', value: false, cls: 'alt' }] });
         if (!ok) { await call('/api/account/logout', 'POST'); D.account = null; D.sync = { rev: 0, lastAt: 0, status: 'off', error: '' }; LB.saveD(); return ''; }
       }
       setBase({}); S.run(); return '';
@@ -94,7 +94,7 @@
 
   async function auth(kind, f) {
     const email = f.email.value.trim(), pw = f.password.value; if (!email || !pw) { LB.toast('Enter your email and password.'); return false; }
-    LB.toast(kind === 'register' ? 'Creating account…' : 'Signing in…');
+    LB.toast(kind === 'register' ? 'Creating account\u2026' : 'Signing in\u2026');
     let r; try { r = await call('/api/account/' + kind, 'POST', { email, password: pw }); } catch (e) { LB.toast('Could not reach the sync server.'); return false; }
     if (!r.ok) { LB.toast(r.j.error || 'Sign-in failed (' + r.status + ').'); return false; }
     f.password.value = '';
@@ -103,7 +103,7 @@
   }
   SB.acctLogin = f => auth('login', f);
   A.acctRegister = async el => { const f = el.closest('form'); return auth('register', f); };
-  A.syncNow = async () => { LB.toast('Syncing…'); await S.run(); LB.toast(D.sync.status === 'ok' ? 'Synced.' : D.sync.error || 'Not synced.'); return false; };
+  A.syncNow = async () => { LB.toast('Syncing\u2026'); await S.run(); LB.toast(D.sync.status === 'ok' ? 'Synced.' : D.sync.error || 'Not synced.'); return false; };
   A.signOut = async () => { try { await call('/api/account/logout', 'POST'); } catch (e) { /* signed out locally anyway */ } D.account = null; D.sync = { rev: 0, lastAt: 0, status: 'off', error: '' }; D.syncConflicts = []; setBase({}); LB.saveD(); footer(); LB.toast('Signed out. Your data stays on this device.'); };
   SB.changePw = async f => {
     const r = await call('/api/account/password', 'POST', { oldPassword: f.oldp.value, newPassword: f.newp.value });
@@ -127,7 +127,7 @@
     if (p.ok) { D.sync.rev = p.j.rev; setBase(st); status('ok'); LB.toast('Backup restored.'); } else LB.toast('Restored on this device, but the cloud copy was not updated: ' + (p.j.error || p.status));
     return true;
   };
-  const labelOf = p => p.split('/').map(x => x.replace(/^#/, '')).join(' › ');
+  const labelOf = p => p.split('/').map(x => x.replace(/^#/, '')).join(' \u203a ');
   A.keepMine = el => { D.syncConflicts.splice(+el.dataset.i, 1); LB.saveD(); return true; };
   A.useTheirs = el => {
     const c = D.syncConflicts[+el.dataset.i]; if (!c) return false;
@@ -138,7 +138,7 @@
 
   S.card = () => {
     const st = D.sync.status, when = D.sync.lastAt ? new Date(D.sync.lastAt).toLocaleString() : '';
-    let h = '<section class="card" aria-labelledby="acH"><h2 id="acH">☁️ Account &amp; sync</h2>';
+    let h = '<section class="card" aria-labelledby="acH"><h2 id="acH">\u2601\ufe0f Account &amp; sync</h2>';
     if (!D.account) {
       h += `<p class="small">Optional. Sign in to use LifeBalance on several phones and computers. Without an account your data stays only in this browser. Needs a sync server (see the README); there is no email recovery, so keep your password safe.</p>
       <form data-s="acctLogin"><label for="acE">Email</label><input type="email" id="acE" name="email" autocomplete="email" required><label for="acP">Password (10+ characters)</label><input type="password" id="acP" name="password" autocomplete="current-password" required minlength="10">
@@ -146,12 +146,12 @@
       <p class="muted small">When you first connect, you choose whether to upload or combine existing data; nothing is replaced without asking.</p></section>`;
       return h;
     }
-    h += `<p class="small">Signed in as <b>${esc(D.account.email)}</b>. Status: <b>${{ ok: '✅ Up to date', syncing: '⏳ Syncing…', offline: '📴 Offline, changes will sync later', failed: '❌ Not synced', off: 'Off' }[st] || st}</b>${when ? ' (last sync ' + esc(when) + ')' : ''}.</p>`;
+    h += `<p class="small">Signed in as <b>${esc(D.account.email)}</b>. Status: <b>${{ ok: '\u2705 Up to date', syncing: '\u23f3 Syncing\u2026', offline: '\ud83d\udcf4 Offline, changes will sync later', failed: '\u274c Not synced', off: 'Off' }[st] || st}</b>${when ? ' (last sync ' + esc(when) + ')' : ''}.</p>`;
     if (D.sync.error) h += `<p class="err" role="alert">${esc(D.sync.error)}</p>`;
     h += `<div class="row"><button type="button" class="btn" data-a="syncNow">Sync now</button><button type="button" class="btn alt" data-a="signOut">Sign out</button></div>
     <p class="muted small">Your data is stored encrypted at rest on the sync server, separately for each account, with automatic backups (at most hourly, newest 30 kept). Sync merges changes from different devices. If two devices edit the same item, your version is kept and the other is listed below so nothing is silently lost.</p>`;
     if (D.syncConflicts.length) {
-      h += '<h3>Changes to review</h3><ul class="plain">' + D.syncConflicts.map((c, i) => `<li class="alert"><b>${esc(c.label || labelOf(c.path))}</b><span>${esc(c.why || 'Changed on two devices')}. Mine: ${show(c.mine)} · Other device: ${show(c.theirs)}</span><div class="row"><button type="button" class="btn sm" data-a="keepMine" data-i="${i}">Keep mine</button><button type="button" class="btn alt sm" data-a="useTheirs" data-i="${i}">Use the other</button></div></li>`).join('') + '</ul>';
+      h += '<h3>Changes to review</h3><ul class="plain">' + D.syncConflicts.map((c, i) => `<li class="alert"><b>${esc(c.label || labelOf(c.path))}</b><span>${esc(c.why || 'Changed on two devices')}. Mine: ${show(c.mine)} \u00b7 Other device: ${show(c.theirs)}</span><div class="row"><button type="button" class="btn sm" data-a="keepMine" data-i="${i}">Keep mine</button><button type="button" class="btn alt sm" data-a="useTheirs" data-i="${i}">Use the other</button></div></li>`).join('') + '</ul>';
     }
     h += `<details><summary>Cloud backups</summary><div class="row"><button type="button" class="btn alt sm" data-a="loadBackups">Show backups</button></div>${S.backups.length ? '<ul class="plain">' + S.backups.map(b => `<li>${esc(new Date(b.at).toLocaleString())} <button type="button" class="btn alt sm" data-a="restoreCloud" data-id="${esc(b.id)}">Restore</button></li>`).join('') + '</ul>' : ''}</details>
     <details><summary>Password and account</summary><form data-s="changePw"><label for="opw">Current password</label><input type="password" id="opw" name="oldp" autocomplete="current-password" required><label for="npw">New password (10+ characters)</label><input type="password" id="npw" name="newp" autocomplete="new-password" required minlength="10"><p><button class="btn alt">Change password</button></p></form>

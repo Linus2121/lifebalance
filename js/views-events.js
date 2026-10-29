@@ -3,15 +3,15 @@
   const LB = window.LB, C = LB.C, V = LB.views, A = LB.actions, SB = LB.submits, esc = LB.esc;
   const ui = LB.ui; ui.evView = 'upcoming'; ui.q = ''; ui.cat = '';
   const ev = id => LB.S.events.find(e => e.id === id);
-  const icon = c => C.CAT_ICONS[c] || '📌';
+  const icon = c => C.CAT_ICONS[c] || '\ud83d\udccc';
 
   function occWhen(o) {
     const multi = o.endDate !== o.date, f = LB.fmtDate;
-    if (o.category === 'Travel' && multi) return `Departs ${f(o.date)}${o.allDay ? '' : ' ' + o.startTime} (${o.tz}) → Returns ${f(o.endDate)}${o.endTime ? ' ' + o.endTime : ''} (${o.endTz})`;
-    let s = f(o.date) + (multi ? ' – ' + f(o.endDate) : '') + (o.allDay ? ' · All day' : ' · ' + o.startTime + (o.endTime && !multi ? '–' + o.endTime : ''));
+    if (o.category === 'Travel' && multi) return `Departs ${f(o.date)}${o.allDay ? '' : ' ' + o.startTime} (${o.tz}) \u2192 Returns ${f(o.endDate)}${o.endTime ? ' ' + o.endTime : ''} (${o.endTz})`;
+    let s = f(o.date) + (multi ? ' \u2013 ' + f(o.endDate) : '') + (o.allDay ? ' \u00b7 All day' : ' \u00b7 ' + o.startTime + (o.endTime && !multi ? '\u2013' + o.endTime : ''));
     if (!o.allDay && o.tz !== LB.tz) {
       s += ` (${o.tz})`;
-      try { s += ' · your time ' + new Date(C.startInstant(o)).toLocaleTimeString(undefined, { timeZone: LB.tz, hour: '2-digit', minute: '2-digit' }); } catch (e) { /* ignore */ }
+      try { s += ' \u00b7 your time ' + new Date(C.startInstant(o)).toLocaleTimeString(undefined, { timeZone: LB.tz, hour: '2-digit', minute: '2-digit' }); } catch (e) { /* ignore */ }
     }
     return s;
   }
@@ -19,12 +19,12 @@
     opt = opt || {};
     const a = `data-id="${o.evId}" data-key="${o.key}"`, t = esc(o.title);
     return `<div class="ev ${o.cancelled ? 'cancelled' : ''}"><div class="ico" role="img" aria-label="${esc(o.category)}">${icon(o.category)}</div><div class="body">
-      <div class="ttl2"><b>${t}</b> ${o.cancelled ? '<span class="badge warn">Cancelled</span>' : ''}${o.recurring ? '<span class="badge">🔁 Repeats</span>' : ''}${o.modified ? '<span class="badge">Changed</span>' : ''}${o.hasReminders ? '<span class="badge" title="Reminders set">🔔</span>' : ''}</div>
-      <div class="small">${esc(o.category)} · ${esc(occWhen(o))}</div>${o.location ? `<div class="small">📍 ${esc(o.location)}</div>` : ''}${o.bookingRef ? `<div class="small">🎫 Booking ref: ${esc(o.bookingRef)}</div>` : ''}
+      <div class="ttl2"><b>${t}</b> ${o.cancelled ? '<span class="badge warn">Cancelled</span>' : ''}${o.recurring ? '<span class="badge">\ud83d\udd01 Repeats</span>' : ''}${o.modified ? '<span class="badge">Changed</span>' : ''}${o.hasReminders ? '<span class="badge" title="Reminders set">\ud83d\udd14</span>' : ''}</div>
+      <div class="small">${esc(o.category)} \u00b7 ${esc(occWhen(o))}</div>${o.location ? `<div class="small">\ud83d\udccd ${esc(o.location)}</div>` : ''}${o.bookingRef ? `<div class="small">\ud83c\udfab Booking ref: ${esc(o.bookingRef)}</div>` : ''}
       ${!opt.compact && o.notes ? `<div class="small muted">${esc(o.notes)}</div>` : ''}
-      ${!opt.compact && o.contact && (o.contact.name || o.contact.phone || o.contact.email) ? `<div class="small">👤 ${esc([o.contact.name, o.contact.phone, o.contact.email].filter(Boolean).join(' · '))}</div>` : ''}
+      ${!opt.compact && o.contact && (o.contact.name || o.contact.phone || o.contact.email) ? `<div class="small">\ud83d\udc64 ${esc([o.contact.name, o.contact.phone, o.contact.email].filter(Boolean).join(' \u00b7 '))}</div>` : ''}
       <div class="row" style="margin-top:6px"><button type="button" class="btn alt sm" data-a="editOcc" ${a} aria-label="Edit ${t}">Edit</button>
-      ${opt.compact ? '' : `<button type="button" class="btn alt sm" data-a="calMenu" ${a} aria-label="Add ${t} to calendar">📆 Calendar</button><button type="button" class="btn alt sm" data-a="cancelOcc" ${a} aria-label="${o.cancelled ? 'Restore' : 'Cancel'} ${t}">${o.cancelled ? 'Restore' : 'Cancel'}</button><button type="button" class="btn danger sm" data-a="delEvent" ${a} aria-label="Delete ${t}">Delete</button>`}</div></div></div>`;
+      ${opt.compact ? '' : `<button type="button" class="btn alt sm" data-a="calMenu" ${a} aria-label="Add ${t} to calendar">\ud83d\udcc6 Calendar</button><button type="button" class="btn alt sm" data-a="cancelOcc" ${a} aria-label="${o.cancelled ? 'Restore' : 'Cancel'} ${t}">${o.cancelled ? 'Restore' : 'Cancel'}</button><button type="button" class="btn danger sm" data-a="delEvent" ${a} aria-label="Delete ${t}">Delete</button>`}</div></div></div>`;
   };
 
   /* ---------- list / calendar ---------- */
@@ -35,8 +35,8 @@
     const past = ui.evView === 'past';
     let occ = past ? C.allOccurrences(S, C.addDays(t, -90), C.addDays(t, -1)).reverse() : C.allOccurrences(S, t, C.addDays(t, 365));
     occ = occ.filter(match).slice(0, 150);
-    if (!S.events.length) return LB.empty('📅', 'No appointments yet', 'Add a GP visit, school event, wedding or trip and set reminders.', '<button type="button" class="btn" data-a="newEvent">Add appointment</button>');
-    if (!occ.length) return LB.empty('🔍', past ? 'No past events found' : 'No upcoming events found', ui.q || ui.cat ? 'Try a different search or category.' : 'Nothing in the next year. Add an appointment to get started.');
+    if (!S.events.length) return LB.empty('\ud83d\udcc5', 'No appointments yet', 'Add a GP visit, school event, wedding or trip and set reminders.', '<button type="button" class="btn" data-a="newEvent">Add appointment</button>');
+    if (!occ.length) return LB.empty('\ud83d\udd0d', past ? 'No past events found' : 'No upcoming events found', ui.q || ui.cat ? 'Try a different search or category.' : 'Nothing in the next year. Add an appointment to get started.');
     let h = '', last = '';
     occ.forEach(o => { if (o.date !== last) { last = o.date; h += `<div class="dayhead">${LB.fmtDate(o.date, true)}</div>`; } h += LB.occRow(o); });
     return h;
@@ -45,7 +45,7 @@
     const t = LB.today(), m = ui.calMonth || t.slice(0, 8) + '01', first = C.weekStart(m), mEnd = C.addMonths(m, 1, 1), gridEnd = C.addDays(C.weekStart(C.addDays(mEnd, -1)), 6);
     const occ = C.allOccurrences(LB.S, first, gridEnd).filter(match), sel = ui.calSel || t;
     const on = d => occ.filter(o => o.date <= d && o.endDate >= d);
-    let h = `<div class="row sp"><button type="button" class="btn alt" data-a="calMove" data-arg="-1" aria-label="Previous month">◀</button><b aria-live="polite">${C.parseDate(m).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'long', year: 'numeric' })}</b><button type="button" class="btn alt" data-a="calMove" data-arg="1" aria-label="Next month">▶</button></div><div class="cal" role="group" aria-label="Calendar" style="margin-top:8px">`;
+    let h = `<div class="row sp"><button type="button" class="btn alt" data-a="calMove" data-arg="-1" aria-label="Previous month">\u25c0</button><b aria-live="polite">${C.parseDate(m).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'long', year: 'numeric' })}</b><button type="button" class="btn alt" data-a="calMove" data-arg="1" aria-label="Next month">\u25b6</button></div><div class="cal" role="group" aria-label="Calendar" style="margin-top:8px">`;
     ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].forEach(d => { h += `<div class="dh" aria-hidden="true">${d}</div>`; });
     for (let d = first; d <= gridEnd; d = C.addDays(d, 1)) {
       const a = on(d), ic = [...new Set(a.map(o => icon(o.category)))].slice(0, 3).join('');
@@ -61,7 +61,7 @@
   A.evCat = el => { ui.cat = ui.cat === el.dataset.arg ? '' : el.dataset.arg; };
   LB.inputs.evSearch = el => { ui.q = el.value; const r = document.getElementById('evResults'); if (r) r.innerHTML = listHtml(); };
   V.events = function () {
-    return `<h2>Events &amp; appointments</h2><button type="button" class="btn big" data-a="newEvent" style="margin-bottom:14px">➕ Add appointment</button>
+    return `<h2>Events &amp; appointments</h2><button type="button" class="btn big" data-a="newEvent" style="margin-bottom:14px">\u2795 Add appointment</button>
       <section class="card"><div class="seg" role="group" aria-label="View">${[['upcoming', 'Upcoming'], ['past', 'Past'], ['cal', 'Calendar']].map(v => `<button type="button" data-a="evView" data-arg="${v[0]}" aria-pressed="${ui.evView === v[0]}">${v[1]}</button>`).join('')}</div>
       <div class="field"><label for="evq">Search events</label><input type="search" id="evq" value="${esc(ui.q)}" data-i="evSearch" placeholder="Title, place or notes" autocomplete="off"></div>
       <div class="seg" role="group" aria-label="Filter by category">${C.CATS.map(c => `<button type="button" data-a="evCat" data-arg="${c}" aria-pressed="${ui.cat === c}">${icon(c)} ${c}</button>`).join('')}</div>
@@ -87,14 +87,14 @@
     }
     let scope = 'all';
     if (rec) { scope = await scopeAsk('Cancel recurring appointment', 'cancel'); if (!scope) return false; }
-    else { const ok = await LB.ask({ title: 'Cancel “' + e.title + '”?', body: '<p>It stays in your list marked as cancelled and its reminders stop. You can restore it later.</p>', buttons: [{ label: 'Keep it', value: false, cls: 'alt' }, { label: 'Cancel appointment', value: true, cls: 'danger' }] }); if (!ok) return false; }
+    else { const ok = await LB.ask({ title: 'Cancel \u201c' + e.title + '\u201d?', body: '<p>It stays in your list marked as cancelled and its reminders stop. You can restore it later.</p>', buttons: [{ label: 'Keep it', value: false, cls: 'alt' }, { label: 'Cancel appointment', value: true, cls: 'danger' }] }); if (!ok) return false; }
     if (scope === 'one') e.exceptions[key] = Object.assign(ex, { cancelled: true }); else e.cancelled = true;
     LB.save(); LB.toast(scope === 'one' ? 'That occurrence was cancelled. The rest of the series is unchanged.' : 'Appointment cancelled. Its reminders were removed.', () => { if (scope === 'one') { delete e.exceptions[key].cancelled; if (!Object.keys(e.exceptions[key]).length) delete e.exceptions[key]; } else e.cancelled = false; LB.save(); });
   };
   A.delEvent = async el => {
     const e = ev(el.dataset.id); if (!e) return;
     const rec = e.recurrence.freq !== 'none';
-    const ok = await LB.ask({ title: 'Delete “' + e.title + '”?', body: rec ? '<p>This deletes the <b>whole series</b>. To skip just one date, choose Cancel on that occurrence instead.</p>' : '<p>This removes the appointment and its reminders.</p>', buttons: [{ label: 'Keep it', value: false, cls: 'alt' }, { label: rec ? 'Delete series' : 'Delete', value: true, cls: 'danger' }] });
+    const ok = await LB.ask({ title: 'Delete \u201c' + e.title + '\u201d?', body: rec ? '<p>This deletes the <b>whole series</b>. To skip just one date, choose Cancel on that occurrence instead.</p>' : '<p>This removes the appointment and its reminders.</p>', buttons: [{ label: 'Keep it', value: false, cls: 'alt' }, { label: rec ? 'Delete series' : 'Delete', value: true, cls: 'danger' }] });
     if (!ok) return false;
     LB.remove(() => LB.S.events, e.id, 'Appointment');
   };
@@ -132,13 +132,13 @@
     const e = [];
     if (!F.title) e.push('Enter a title.');
     if (!C.isDate(F.date)) e.push('Choose a valid date.');
-    if (!C.isTz(F.tz)) e.push('The time zone “' + F.tz + '” is not recognised. Pick one from the list, e.g. Europe/London.');
+    if (!C.isTz(F.tz)) e.push('The time zone \u201c' + F.tz + '\u201d is not recognised. Pick one from the list, e.g. Europe/London.');
     if (F.category === 'Travel' && F.endTz && !C.isTz(F.endTz)) e.push('The return time zone is not recognised.');
-    if (!F.allDay && !C.isTime(F.startTime)) e.push('Choose a start time, or tick “All day”.');
+    if (!F.allDay && !C.isTime(F.startTime)) e.push('Choose a start time, or tick \u201cAll day\u201d.');
     if (F.endDate && C.isDate(F.date) && F.endDate < F.date) e.push('The end/return date cannot be before the start date.');
     if (!F.allDay && F.endTime && !C.isTime(F.endTime)) e.push('The end time is not valid.');
     if (!F.allDay && C.isTime(F.endTime) && C.isTime(F.startTime) && (!F.endDate || F.endDate === F.date) && F.endTime <= F.startTime && F.tz === (F.category === 'Travel' ? F.endTz : F.tz)) e.push('The end time must be after the start time.');
-    if (F.scope === 'all' && F.freq !== 'none' && F.until && C.isDate(F.date) && F.until < F.date) e.push('“Repeat until” cannot be before the start date.');
+    if (F.scope === 'all' && F.freq !== 'none' && F.until && C.isDate(F.date) && F.until < F.date) e.push('\u201cRepeat until\u201d cannot be before the start date.');
     if (F.cEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(F.cEmail)) e.push('The contact email does not look right.');
     return e;
   }
