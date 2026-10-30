@@ -5,8 +5,8 @@
 })(this, function () {
   'use strict';
 
-  const CATS = ['General', 'School', 'GP', 'Hospital', 'Meetings', 'Weddings', 'Travel', 'Other'];
-  const CAT_ICONS = { General: '\ud83d\udccc', School: '\ud83c\udf93', GP: '\ud83e\ude7a', Hospital: '\ud83c\udfe5', Meetings: '\ud83d\udc65', Weddings: '\ud83d\udc8d', Travel: '\u2708\ufe0f', Other: '\ud83d\uddc2\ufe0f' };
+  const CATS = ['General', 'School', 'GP', 'Hospital', 'Meetings', 'Weddings', 'Travel', 'Work', 'Other'];
+  const CAT_ICONS = { Work: '\ud83d\udcbc', General: '\ud83d\udccc', School: '\ud83c\udf93', GP: '\ud83e\ude7a', Hospital: '\ud83c\udfe5', Meetings: '\ud83d\udc65', Weddings: '\ud83d\udc8d', Travel: '\u2708\ufe0f', Other: '\ud83d\uddc2\ufe0f' };
   const PRESET_OFFSETS = [
     { min: 20160, label: '14 days before' }, { min: 10080, label: '7 days before' }, { min: 4320, label: '3 days before' },
     { min: 1440, label: '1 day before' }, { min: 120, label: '2 hours before' }, { min: 30, label: '30 minutes before' },
@@ -14,7 +14,7 @@
   const WORKOUT_TYPES = { walking: 'Walking', running: 'Running', cycling: 'Cycling', gym: 'Gym session', custom: 'Custom activity' };
   const MEAL_SLOTS = ['breakfast', 'lunch', 'dinner', 'snack'];
   const ALL_DAY_TIME = '09:00';
-  const APP_UPDATED = '2026-10-29';
+  const APP_UPDATED = '2026-10-30';
 
   /* ---------- dates (date keys are YYYY-MM-DD, handled in UTC so they never shift) ---------- */
   const pad = n => String(n).padStart(2, '0');
@@ -178,7 +178,7 @@
       const ex = exs[orig] || {}, date = ex.date || orig;
       return {
         evId: ev.id, key: orig, date, endDate: addDays(date, span), allDay: ev.allDay, startTime: pick(ex, 'startTime', ev.startTime), endTime: pick(ex, 'endTime', ev.endTime),
-        title: ex.title || ev.title, location: pick(ex, 'location', ev.location), notes: pick(ex, 'notes', ev.notes), category: ev.category, tz: ev.tz, endTz: ev.endTz,
+        workKind: ev.workKind || '', title: ex.title || ev.title, location: pick(ex, 'location', ev.location), notes: pick(ex, 'notes', ev.notes), category: ev.category, tz: ev.tz, endTz: ev.endTz,
         cancelled: !!(ev.cancelled || ex.cancelled), seriesCancelled: !!ev.cancelled, occCancelled: !!ex.cancelled, modified: !!ex.date || (!ex.cancelled && Object.keys(ex).length > 0),
         recurring: !!ev.recurrence && ev.recurrence.freq !== 'none', bookingRef: ev.bookingRef, contact: ev.contact, hasReminders: (ev.reminders.offsets || []).length > 0, offsets: ev.reminders.offsets || [],
         returnTime: ev.endTime, returnDate: ev.endDate
@@ -204,22 +204,29 @@
 
   function reminderPreview(ev, nowMs) {
     const offsets = cleanOffsets(ev.reminders && ev.reminders.offsets);
-    if (ev.cancelled || !offsets.length) return null;
+    if (ev.cancelled || (!offsets.length && !ev.endReminder)) return null;
     const from = dateInTz(nowMs, ev.tz);
     const occ = occurrences(ev, addDays(from, -1), addDays(from, 800)).filter(o => !o.cancelled && startInstant(o) > nowMs).sort(occSort)[0];
     if (!occ) return { occ: null, items: [] };
-    return { occ, items: offsets.map(m => { const at = fireInstant(occ, m); return { offset: m, label: offsetLabel(m), at, past: at <= nowMs }; }) };
+    const items = offsets.map(m => { const at = fireInstant(occ, m); return { offset: m, label: offsetLabel(m), at, past: at <= nowMs }; });
+    if (ev.endReminder && occ.endTime) { const at=zonedToUtc(occ.endDate,occ.endTime,occ.endTz); items.push({offset:0,label:'Break ends',at,past:at<=nowMs}); }
+    return {occ,items};
   }
 
   function remindersBetween(S, fromMs, toMs, tz) {
     const out = [], settings = S.settings;
     S.events.forEach(ev => {
       const offsets = cleanOffsets(ev.reminders.offsets);
-      if (ev.cancelled || !offsets.length) return;
-      const maxO = offsets[0];
+      if (ev.cancelled || (!offsets.length && !ev.endReminder)) return;
+      const maxO = offsets[0] || 0;
       const f = addDays(dateInTz(fromMs, ev.tz), -1), t = addDays(dateInTz(toMs + maxO * 60000, ev.tz), 1);
       occurrences(ev, f, t).forEach(occ => {
         if (occ.cancelled) return;
+        if (ev.workKind === 'break' && ev.endReminder && occ.endTime && !occ.cancelled) {
+          const endOcc = Object.assign({}, occ, {date:occ.endDate, startTime:occ.endTime, tz:occ.endTz, title:'Break ends: '+occ.title});
+          const at = startInstant(endOcc);
+          if (at >= fromMs && at <= toMs) out.push({key:`ev|${ev.id}|${occ.key}|end|${at}`,at,kind:'event',title:endOcc.title,offset:0,occ:Object.assign(endOcc,{key:occ.key})});
+        }
         offsets.forEach(m => {
           const at = fireInstant(occ, m);
           if (at >= fromMs && at <= toMs) out.push({ key: `ev|${ev.id}|${occ.key}|${m}|${at}`, at, kind: 'event', title: occ.title, offset: m, occ });
@@ -253,7 +260,7 @@
   /* ---------- state: defaults, normalisation, validation ---------- */
   function freshState(today) {
     return {
-      version: 2, tasks: [], habits: builtinHabits(today), logs: {}, journal: [], draft: { mood: null, note: '' }, achievements: {}, events: [],
+      version: 3, work: { workingDays: [1,2,3,4,5], allowances: [], leave: [] }, tasks: [], habits: builtinHabits(today), logs: {}, journal: [], draft: { mood: null, note: '' }, achievements: {}, events: [],
       fitness: { goals: { weeklyWorkouts: 3, weeklyMinutes: 150, trackWeight: false, targetWeightKg: null }, plan: [], workouts: [], weights: [] },
       food: { prefs: { diets: [], allergies: [], exclusions: [], trackCalories: false, calorieTarget: null }, diary: {}, plan: {}, planServings: {}, custom: [], favourites: [], shopping: [] },
       settings: {
@@ -296,7 +303,7 @@
     });
     const allDay = !!e.allDay;
     return {
-      id: idOr(e.id), title: str(e.title, 120), category: CATS.includes(e.category) ? e.category : 'General', allDay, date: e.date,
+      id: idOr(e.id), workKind: ['shift','break','meeting'].includes(e.workKind) ? e.workKind : '', endReminder: e.workKind === 'break' && !!e.endReminder, title: str(e.title, 120), category: CATS.includes(e.category) ? e.category : 'General', allDay, date: e.date,
       startTime: allDay ? '' : timeOr(e.startTime, '09:00'), endTime: allDay ? '' : timeOr(e.endTime, ''), endDate: isDate(e.endDate) && e.endDate >= e.date ? e.endDate : '',
       tz, endTz: isTz(e.endTz) ? e.endTz : tz, location: str(e.location, 200), notes: str(e.notes, 2000), bookingRef: str(e.bookingRef, 60),
       contact: { name: str(c.name, 100), phone: str(c.phone, 40), email: str(c.email, 120) }, recurrence: cleanRec(e.recurrence), exceptions: ex, cancelled: !!e.cancelled,
@@ -355,6 +362,18 @@
     S.food.shopping = list(fd.shopping, warn, s => isObj(s) && str(s.name) ? { id: idOr(s.id), name: str(s.name, 80), auto: !!s.auto, checked: !!s.checked, sources: strList(s.sources, 80, 20), key: str(s.key, 100) } : null);
     S.food.planServings = {};
     if (isObj(fd.planServings)) Object.keys(fd.planServings).slice(0, 5000).forEach(k => { const v = numOr(fd.planServings[k], null, 0.5, 20); if (v !== null && /^\d{4}-\d{2}-\d{2}\|[a-z]+$/.test(k)) S.food.planServings[k] = v; });
+    const w = isObj(r.work) ? r.work : {};
+    if (Array.isArray(w.workingDays)) S.work.workingDays = [...new Set(w.workingDays.filter(n => Number.isInteger(n) && n >= 0 && n <= 6))];
+    S.work.allowances = list(w.allowances, warn, a => isObj(a) && Number.isInteger(+a.year) && +a.year >= 2000 && +a.year <= 2200 && Number.isFinite(+a.days) && +a.days >= 0 && +a.days <= 366 ? {id:String(+a.year),year:+a.year,days:+a.days} : null).slice(0,201);
+    S.work.allowances = S.work.allowances.filter((a,i,arr) => arr.findIndex(b=>b.year===a.year)===i);
+    S.work.leave = list(w.leave, warn, l => {
+      if (!isObj(l) || !isDate(l.start) || !isDate(l.end) || l.end < l.start || diffDays(l.start,l.end)>366) return null;
+      const dates = new Map();
+      if (Array.isArray(l.allocations)) l.allocations.slice(0,367).forEach(a => {
+        if (isObj(a) && isDate(a.date) && a.date >= l.start && a.date <= l.end && Number.isFinite(+a.days) && +a.days>0 && +a.days<=1) dates.set(a.date, Math.max(dates.get(a.date)||0,+a.days));
+      });
+      return {id:idOr(l.id),start:l.start,end:l.end,notes:str(l.notes,500),allocations:[...dates].map(([date,days])=>({date,days}))};
+    }).slice(0,1000);
     const st = isObj(r.settings) ? r.settings : {}, d = S.settings;
     d.showDetails = !!st.showDetails;
     if (Array.isArray(st.defaultOffsets)) d.defaultOffsets = cleanOffsets(st.defaultOffsets);
@@ -365,7 +384,7 @@
   }
   const summarize = S => ({
     tasks: S.tasks.length, habits: S.habits.length, journal: S.journal.length, events: S.events.length, workouts: S.fitness.workouts.length,
-    meals: Object.values(S.food.diary).reduce((a, x) => a + x.length, 0), recipes: S.food.custom.length
+    meals: Object.values(S.food.diary).reduce((a, x) => a + x.length, 0), recipes: S.food.custom.length, leaveBookings: S.work.leave.length, workEvents: S.events.filter(e=>e.workKind).length
   });
   // Validates a backup file's text. Returns {ok:false,error} or {ok:true,state,dropped,summary}.
   function validateImport(text, today) {
@@ -379,15 +398,15 @@
       if (!isObj(obj.data)) return { ok: false, error: 'The backup has no data section.' };
       data = obj.data;
     }
-    if (data.version !== undefined && (typeof data.version !== 'number' || data.version > 2)) return { ok: false, error: 'This backup was made by a newer version of LifeBalance.' };
-    const known = ['tasks', 'habits', 'logs', 'journal', 'events', 'fitness', 'food'];
+    if (data.version !== undefined && (typeof data.version !== 'number' || data.version > 3)) return { ok: false, error: 'This backup was made by a newer version of LifeBalance.' };
+    const known = ['tasks', 'habits', 'logs', 'journal', 'events', 'fitness', 'food', 'work'];
     if (!known.some(k => k in data)) return { ok: false, error: 'No LifeBalance data found in this file.' };
     for (const k of ['tasks', 'habits', 'journal', 'events']) if (k in data && !Array.isArray(data[k])) return { ok: false, error: `"${k}" must be a list.` };
-    for (const k of ['logs', 'fitness', 'food']) if (k in data && !isObj(data[k])) return { ok: false, error: `"${k}" has the wrong format.` };
+    for (const k of ['logs', 'fitness', 'food', 'work']) if (k in data && !isObj(data[k])) return { ok: false, error: `"${k}" has the wrong format.` };
     const n = normalize(data, today);
     return { ok: true, state: n.state, dropped: n.dropped, summary: summarize(n.state) };
   }
-  const exportData = (S, now = new Date()) => JSON.stringify({ app: 'LifeBalance', format: 1, version: 2, exportedAt: now.toISOString(), data: S }, null, 2);
+  const exportData = (S, now = new Date()) => JSON.stringify({ app: 'LifeBalance', format: 1, version: 3, exportedAt: now.toISOString(), data: S }, null, 2);
 
   /* ---------- demo data ---------- */
   function demoState(today) {

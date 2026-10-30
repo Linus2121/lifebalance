@@ -124,3 +124,17 @@ test('delete account removes cloud data and sessions', async () => {
   assert.equal((await s.call('GET', '/api/sync', undefined, a.token)).status, 401);
   assert.deepEqual(fs.readdirSync(path.join(s.dir, 'users')), []); s.close();
 });
+
+test('older clients cannot overwrite schema-3 Work data with a lower-schema sync', async () => {
+  const s=await setup();
+  try {
+    const a=await signUp(s,'work@example.com');
+    const first=await s.call('PUT','/api/sync',{baseRev:0,data:{version:3,work:{allowances:[{id:'2026',year:2026,days:25}],leave:[]}}},a.token);
+    assert.equal(first.status,200);
+    const saved=await j(first);
+    const old=await s.call('PUT','/api/sync',{baseRev:saved.rev,data:{version:2,tasks:[]},force:true},a.token);
+    assert.equal(old.status,426);
+    const current=await j(await s.call('GET','/api/sync',undefined,a.token));
+    assert.equal(current.data.work.allowances[0].days,25);
+  } finally {s.close();}
+});

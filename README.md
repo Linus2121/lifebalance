@@ -99,3 +99,6 @@ Powered by Lamb Technologies
 - Account forms check backend availability before they are shown. This does not deploy a backend or complete the pending verification/recovery frontend integration.
 - Settings records the last requested backup export and encourages regular exports; downloading is controlled by the browser.
 - Validation: 37 existing tests plus 4 regional/measurement tests pass. Real-device push, signed-in cross-device sync, native packaging and full translations are not verified or completed by this update.
+
+## Work (1.1.0, updated 2026-10-30)
+Work adds shifts, days off with automatic annual leave balance, breaks and staff meetings using the existing event/reminder engine. See [Work documentation and platform status](docs/WORK.md). Web features share the same code/data across Android, iOS/iPadOS, Windows, macOS and Linux browsers. Native notification delivery is currently packaged for Android only; other native packaging/signing and real-device testing remain pending. Existing data upgrades to schema 3; update devices before syncing or importing newer backups.

@@ -91,10 +91,11 @@
       <p><button class="btn">Save</button></p></form>
       <p class="small"><b>Where is my data?</b> Everything (tasks, habits, journal, appointments, fitness and food) is stored in this browser on this device (localStorage). Nothing is uploaded unless you (a) sign in to sync, which stores an encrypted copy on the sync server, or (b) enable closed-app reminders, which sends reminder times and short text. Clearing browser data erases the local copy, so export a backup regularly.</p></section>`;
 
-    const bi = LB.getBackup(K.BK_IMPORT), bc = LB.getBackup(K.BK_CLEAR);
+    const bi = LB.getBackup(K.BK_IMPORT), bc = LB.getBackup(K.BK_CLEAR), bw = LB.getBackup(K.BK_WORK);
     h += `<section class="card" aria-labelledby="dtH"><h2 id="dtH">\ud83d\udcbe Your data</h2><p class="muted small">${D.lastExport ? 'Last backup export: ' + esc(when(D.lastExport)) : 'No backup export recorded on this device. Export regularly to protect your records.'}</p>
       <div class="row"><button type="button" class="btn" data-a="exportData">Export backup (JSON)</button><button type="button" class="btn alt" data-a="pickImport">Import backup\u2026</button><input type="file" id="impFile" accept="application/json,.json" data-c="importFile" class="sr" tabindex="-1" aria-label="Choose backup file"></div>
       <p class="muted small">Backups contain private health and journal information. Keep the file somewhere safe. Importing replaces your current data after you confirm, and a copy of what you had is kept so you can restore it.</p>
+      ${bw ? `<p class="small">A safety copy from before the Work upgrade is saved on this device. <button class="btn alt sm" data-a="exportPreWork">Export pre-upgrade copy</button></p>` : ''}
       ${bi ? `<p class="small">Before your last import: backup from ${esc(when(bi.at))} <button type="button" class="btn alt sm" data-a="restoreBk" data-arg="import">Restore it</button></p>` : ''}
       ${bc ? `<p class="small">Before you last cleared data: backup from ${esc(when(bc.at))} <button type="button" class="btn alt sm" data-a="restoreBk" data-arg="clear">Restore it</button></p>` : ''}
       <div class="row"><button type="button" class="btn danger" data-a="clearAll">Clear all my data\u2026</button></div></section>`;
@@ -115,6 +116,7 @@
   A.enterDemoA = () => { LB.enterDemo(); return false; };
   A.resetDemo = async () => { if (await LB.confirm('Reset demo data?', '<p>Demo changes will be replaced by fresh sample data. Your own data is not affected.</p>', 'Reset')) LB.resetDemo(); return false; };
 
+  A.exportPreWork = () => { const b=LB.getBackup(K.BK_WORK);if(b)LB.download('lifebalance-before-work.json','application/json',C.exportData(b.state));return false; };
   A.exportData = () => {
     const blob = new Blob([C.exportData(LB.personal)], { type: 'application/json' }), a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = 'lifebalance-backup-' + LB.today() + '.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
@@ -129,7 +131,7 @@
     const res = C.validateImport(await file.text(), LB.today());
     if (!res.ok) { LB.toast('Import failed: ' + res.error); return 'none'; }
     const s = res.summary;
-    const ok = await LB.confirm('Replace your data with this backup?', `<p>This backup contains: ${s.tasks} tasks, ${s.habits} habits, ${s.journal} journal entries, ${s.events} appointments, ${s.workouts} workouts, ${s.meals} meal entries and ${s.recipes} recipes.</p>${res.dropped ? `<p>${res.dropped} invalid item${res.dropped === 1 ? ' was' : 's were'} skipped.</p>` : ''}<p><b>Your current data will be replaced.</b> A copy is kept so you can restore it.</p>`, 'Replace my data', true);
+    const ok = await LB.confirm('Replace your data with this backup?', `<p>This backup contains: ${s.tasks} tasks, ${s.habits} habits, ${s.journal} journal entries, ${s.events} appointments, ${s.workouts} workouts, ${s.meals} meal entries and ${s.recipes} recipes and ${s.leaveBookings || 0} leave bookings (work commitments are included in appointments).</p>${res.dropped ? `<p>${res.dropped} invalid item${res.dropped === 1 ? ' was' : 's were'} skipped.</p>` : ''}<p><b>Your current data will be replaced.</b> A copy is kept so you can restore it.</p>`, 'Replace my data', true);
     if (!ok) return 'none';
     if (!LB.replacePersonal(res.state, K.BK_IMPORT)) { LB.toast('Import cancelled: a safety copy of your current data could not be saved (storage may be full).'); return 'none'; }
     LB.rem.prune(); LB.toast('Backup imported. Your previous data can be restored from Settings.'); return true;

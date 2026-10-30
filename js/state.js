@@ -2,8 +2,9 @@
 (function () {
   const C = window.LBCore;
   const KEY = 'lifebalance.v2', V1 = 'lifebalance.v1', DEMO = 'lifebalance.demo', DEV = 'lifebalance.device';
+  const BK_WORK = 'lifebalance.backup.beforeWork';
   const BK_IMPORT = 'lifebalance.backup.import', BK_CLEAR = 'lifebalance.backup.clear';
-  const LB = window.LB = { C, views: {}, actions: {}, submits: {}, inputs: {}, changes: {}, hooks: [], ui: { tab: 'today', view: null }, KEYS: { KEY, V1, DEMO, DEV, BK_IMPORT, BK_CLEAR } };
+  const LB = window.LB = { C, views: {}, actions: {}, submits: {}, inputs: {}, changes: {}, hooks: [], ui: { tab: 'today', view: null }, KEYS: { KEY, V1, DEMO, DEV, BK_IMPORT, BK_CLEAR, BK_WORK } };
 
   LB.esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   LB.today = () => C.localDateKey();
@@ -24,7 +25,10 @@
     let personal = null, raw = localStorage.getItem(KEY);
     if (raw) {
       let parsed = null; try { parsed = JSON.parse(raw); } catch (e) { parsed = null; }
-      if (parsed) personal = C.normalize(parsed, today).state;
+      if (parsed) {
+        if ((parsed.version || 1) < 3 && !localStorage.getItem(BK_WORK)) { try { localStorage.setItem(BK_WORK, JSON.stringify({at:Date.now(),state:parsed})); } catch(e) { LB.loadNotice='Could not create an upgrade backup. Export your records from Settings.'; } }
+        personal = C.normalize(parsed, today).state;
+      }
       else { try { localStorage.setItem('lifebalance.corrupt.' + Date.now(), raw); } catch (e) { /* ignore */ } LB.loadNotice = 'Your saved data could not be read. A copy was kept in this browser and a fresh start was created.'; }
     } else {
       const v1 = localStorage.getItem(V1);
@@ -113,7 +117,7 @@
   };
 
   /* ---------- rendering ---------- */
-  const TABS = [['today', '\ud83c\udfe0', 'Today'], ['habits', '\u2705', 'Habits'], ['journal', '\ud83d\udcd4', 'Journal'], ['events', '\ud83d\udcc5', 'Events'], ['wellness', '\ud83d\udcaa', 'Wellness'], ['progress', '\ud83d\udcca', 'Progress']];
+  const TABS = [['today', '\ud83c\udfe0', 'Today'], ['habits', '\u2705', 'Habits'], ['journal', '\ud83d\udcd4', 'Journal'], ['events', '\ud83d\udcc5', 'Events'], ['wellness', '\ud83d\udcaa', 'Wellness'], ['work', '\ud83d\udcbc', 'Work'], ['progress', '\ud83d\udcca', 'Progress']];
   LB.go = tab => { LB.ui.tab = tab; LB.ui.view = null; LB.render(true); };
   LB.render = top => {
     const app = document.getElementById('app'), y = window.scrollY;

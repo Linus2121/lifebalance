@@ -8,7 +8,7 @@
   function occWhen(o) {
     const multi = o.endDate !== o.date, f = LB.fmtDate;
     if (o.category === 'Travel' && multi) return `Departs ${f(o.date)}${o.allDay ? '' : ' ' + o.startTime} (${o.tz}) \u2192 Returns ${f(o.endDate)}${o.endTime ? ' ' + o.endTime : ''} (${o.endTz})`;
-    let s = f(o.date) + (multi ? ' \u2013 ' + f(o.endDate) : '') + (o.allDay ? ' \u00b7 All day' : ' \u00b7 ' + o.startTime + (o.endTime && !multi ? '\u2013' + o.endTime : ''));
+    let s = f(o.date) + (multi ? ' \u2013 ' + f(o.endDate) : '') + (o.allDay ? ' \u00b7 All day' : ' \u00b7 ' + o.startTime + (o.endTime ? (multi ? ' \u2192 ' : '\u2013') + o.endTime : ''));
     if (!o.allDay && o.tz !== LB.tz) {
       s += ` (${o.tz})`;
       try { s += ' \u00b7 your time ' + new Date(C.startInstant(o)).toLocaleTimeString(undefined, { timeZone: LB.tz, hour: '2-digit', minute: '2-digit' }); } catch (e) { /* ignore */ }
@@ -107,7 +107,7 @@
   function openForm(e, scope, key) {
     if (!e) { ui.form = blank(); } else {
       const occ = scope === 'one' ? C.occurrences(e, key, key).find(o => o.key === key) || null : null, s = occ || e;
-      ui.form = { mode: 'edit', scope, id: e.id, origKey: key || e.date, title: s.title, category: e.category, allDay: e.allDay, date: s.date, startTime: s.startTime || '09:00', endTime: s.endTime || '', endDate: e.endDate, tz: e.tz, endTz: e.endTz, location: s.location, notes: s.notes, bookingRef: e.bookingRef,
+      ui.form = { mode: 'edit', workKind:e.workKind,endReminder:e.endReminder, scope, id: e.id, origKey: key || e.date, title: s.title, category: e.category, allDay: e.allDay, date: s.date, startTime: s.startTime || '09:00', endTime: s.endTime || '', endDate: e.endDate, tz: e.tz, endTz: e.endTz, location: s.location, notes: s.notes, bookingRef: e.bookingRef,
         cName: e.contact.name, cPhone: e.contact.phone, cEmail: e.contact.email, freq: e.recurrence.freq, interval: e.recurrence.interval, until: e.recurrence.until, offsets: e.reminders.offsets.slice(), count: e.recurrence.count };
     }
     ui.formErr = []; ui.view = 'eventForm'; window.scrollTo(0, 0); ui.focus = '#f-title';
@@ -119,13 +119,14 @@
     ['title', 'category', 'date', 'startTime', 'endTime', 'endDate', 'tz', 'endTz', 'location', 'notes', 'bookingRef', 'freq', 'until'].forEach(n => { F[n] = (v(n) == null ? '' : String(v(n))).trim(); });
     F.cName = v('cName') || ''; F.cPhone = v('cPhone') || ''; F.cEmail = v('cEmail') || ''; F.interval = Math.max(1, parseInt(v('interval'), 10) || 1);
     if (g('allDay')) F.allDay = g('allDay').checked;
+    if (g('endReminder')) F.endReminder = g('endReminder').checked;
     F.offsets = [...f.querySelectorAll('input[name=off]:checked')].map(i => +i.value);
     if (F.scope === 'all' && F.category !== 'Travel') F.endTz = F.tz;
     return F;
   }
   function toRaw(F, old) {
     const trav = F.category === 'Travel';
-    return { id: F.id || 'tmp', title: F.title, category: F.category, allDay: F.allDay, date: F.date, startTime: F.startTime, endTime: F.endTime, endDate: F.endDate, tz: F.tz, endTz: trav ? F.endTz || F.tz : F.tz, location: F.location, notes: F.notes, bookingRef: trav ? F.bookingRef : '',
+    return { workKind: old ? old.workKind : '', endReminder: F.endReminder !== undefined ? F.endReminder : old ? old.endReminder : false, id: F.id || 'tmp', title: F.title, category: F.category, allDay: F.allDay, date: F.date, startTime: F.startTime, endTime: F.endTime, endDate: F.endDate, tz: F.tz, endTz: trav ? F.endTz || F.tz : F.tz, location: F.location, notes: F.notes, bookingRef: trav ? F.bookingRef : '',
       contact: { name: F.cName, phone: F.cPhone, email: F.cEmail }, recurrence: { freq: F.freq, interval: F.interval, until: F.until, count: F.count || 0 }, reminders: { offsets: F.offsets }, exceptions: old ? old.exceptions : {}, cancelled: old ? old.cancelled : false };
   }
   function validate(F) {
@@ -146,7 +147,7 @@
   /* ---------- reminder preview ---------- */
   function previewHtml(F) {
     const now = Date.now(), offs = C.cleanOffsets(F.offsets);
-    if (!offs.length) return '<p class="muted">No reminders selected for this appointment.</p>';
+    if (!offs.length && !F.endReminder) return '<p class="muted">No reminders selected for this appointment.</p>';
     if (!F.title || !C.isDate(F.date) || !C.isTz(F.tz) || (!F.allDay && !C.isTime(F.startTime))) return '<p class="muted">Enter a title, date, time and valid time zone to see exact reminder times.</p>';
     let occ, items;
     if (F.scope === 'one') { occ = { date: F.date, startTime: F.startTime, allDay: F.allDay, tz: F.tz }; items = offs.map(m => { const at = C.fireInstant(occ, m); return { offset: m, label: C.offsetLabel(m), at, past: at <= now }; }); }
@@ -199,7 +200,7 @@
       ${one ? '' : `<details ${F.cName || F.cPhone || F.cEmail ? 'open' : ''}><summary>Contact details (optional)</summary>${inp('f-cn', 'cName', 'Contact name', F.cName, 'text', 'maxlength="100"')}${inp('f-cp', 'cPhone', 'Phone', F.cPhone, 'tel', 'maxlength="40"')}${inp('f-ce', 'cEmail', 'Email', F.cEmail, 'email', 'maxlength="120"')}</details>
       <fieldset style="margin-top:12px"><legend>Repeat</legend><div class="row"><div class="grow"><label for="f-fr" class="sr">Repeats</label><select id="f-fr" name="freq" data-struct="1">${[['none', 'Does not repeat'], ['daily', 'Daily'], ['weekly', 'Weekly'], ['monthly', 'Monthly'], ['yearly', 'Yearly']].map(o => `<option value="${o[0]}" ${F.freq === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></div>
       ${rec ? `<div class="grow"><label for="f-iv">Every (number of ${{ daily: 'days', weekly: 'weeks', monthly: 'months', yearly: 'years' }[F.freq]})</label><input type="number" id="f-iv" name="interval" min="1" max="365" value="${F.interval}"></div><div class="grow"><label for="f-un">Repeat until (optional)</label><input type="date" id="f-un" name="until" value="${F.until}"></div>` : ''}</div></fieldset>`}
-      <fieldset><legend>Reminders</legend>${one ? '<p class="muted small">This occurrence uses the reminders set for the series. Edit the whole series to change them.</p>' : ''}
+      <fieldset><legend>Reminders</legend>${F.workKind==='break'&&!one?'<label class="check"><input type="checkbox" name="endReminder" '+(F.endReminder?'checked':'')+'>Remind me when the break ends</label>':''}${one ? '<p class="muted small">This occurrence uses the reminders set for the series. Edit the whole series to change them.</p>' : ''}
       <div ${one ? 'hidden' : ''}>${C.PRESET_OFFSETS.map(p => chk(p.min, p.label)).join('')}${customs.map(m => chk(m, C.offsetLabel(m) + ' (custom)')).join('')}
       <div class="row" style="margin-top:8px"><div><label for="cuN">Custom reminder</label><input type="number" id="cuN" min="1" step="any" placeholder="e.g. 45" style="width:110px"></div><div><label for="cuU">Unit</label><select id="cuU"><option value="1">minutes before</option><option value="60">hours before</option><option value="1440">days before</option></select></div><button type="button" class="btn alt" data-a="addCustomOff">Add</button></div></div>
       <h3 style="margin-top:12px">Exact reminder times</h3><div id="evPreview" aria-live="polite">${previewHtml(F)}</div><p class="muted small">${esc(LB.rem ? LB.rem.deliveryNote() : '')}</p></fieldset>

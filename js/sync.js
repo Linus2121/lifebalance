@@ -25,7 +25,7 @@
     try { localStorage.setItem(K.KEY, JSON.stringify(state)); } catch (e) { LB.toast('Could not save synced data: browser storage is full.'); }
     LB.rem && LB.rem.syncSoon(); LB.render();
   }
-  const norm = d => C.normalize(d, LB.today()).state;
+  const norm = d => {if(d && d.version > 3)throw new Error('Update LifeBalance before syncing this newer data.');return C.normalize(d, LB.today()).state;};
 
   S.run = async () => {
     if (!D.account || LB.D.demo) return;

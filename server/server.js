@@ -163,6 +163,8 @@ function createApp(opts) {
       if (p === '/api/sync' && method === 'PUT') {
         const b = await readBody(req, MAX_SYNC_BODY);
         if (!b || typeof b.data !== 'object' || b.data === null || Array.isArray(b.data) || !Number.isInteger(b.baseRev) || b.baseRev < 0) return send(res, 400, { error: 'Invalid sync request' });
+        const current = acct.getData(user.id);
+        if (current.data && Number(current.data.version || 0) > Number(b.data.version || 0)) return send(res, 426, { error: 'Update LifeBalance on this device before syncing. Older data cannot replace the newer format.' });
         const r = acct.putData(user.id, b.baseRev, b.data, b.force === true);
         return r.conflict ? send(res, 409, { error: 'The cloud copy changed on another device.', rev: r.rev, updatedAt: r.updatedAt, data: r.data }) : send(res, 200, r);
       }
