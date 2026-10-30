@@ -27,3 +27,9 @@ Core features, branding and backup data format are shared. Native notifications,
 Automated tests cover leave weekends/rosters, overlaps/cancellation, manual corrections, cross-year balance, schema migration, malformed imports, backup roundtrip, merge, overnight/DST shifts, breaks and shared start/end reminder cancellation. UI integration tests render all Work sections and calendar and submit a meeting using the existing event engine. Existing tests are also run. Android compilation and published web UI checks are recorded with release results; real-device delivery and cross-OS hardware tests are pending.
 
 Local validation result: 63 app/model tests passed; all 30 existing server tests passed, with an additional targeted schema-downgrade regression test added and run. Real-device and cross-OS hardware checks remain pending.
+
+
+## Release result — 2026-10-30
+64 application/model tests passed. All 30 pre-existing server tests passed and the added schema-downgrade regression passed in the targeted release test suite (11 tests in that suite). GitHub Android build 41118445332 and Pages deployment succeeded for commit 4ea6a2494303463dfcf6e93cc6e45e5c68e4d49c. APK artifact: https://github.com/Linus2121/lifebalance/actions/runs/41118445332/artifacts/13007281578 (debug test build, not a store release).
+
+Published Chromium UI verified in isolated demo mode: Work navigation, annual allowance 25 with a Mon–Fri booking deducting 5 and displaying 20 remaining, staff meeting confirmation showing 08:30/09:00 Europe/Dublin alerts for a 09:00 meeting, saved meeting list, and calendar markers for leave/meetings. No user personal records were changed during that check. Native Samsung tablet delivery, real OS/browser matrix, iOS/desktop packaging/signing and configured live sync remain pending.
