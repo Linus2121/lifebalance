@@ -107,7 +107,7 @@
   function openForm(e, scope, key) {
     if (!e) { ui.form = blank(); } else {
       const occ = scope === 'one' ? C.occurrences(e, key, key).find(o => o.key === key) || null : null, s = occ || e;
-      ui.form = { mode: 'edit', workKind:e.workKind,endReminder:e.endReminder, scope, id: e.id, origKey: key || e.date, title: s.title, category: e.category, allDay: e.allDay, date: s.date, startTime: s.startTime || '09:00', endTime: s.endTime || '', endDate: e.endDate, tz: e.tz, endTz: e.endTz, location: s.location, notes: s.notes, bookingRef: e.bookingRef,
+      ui.form = { mode: 'edit', workKind:e.workKind,endReminder:e.endReminder, scope, id: e.id, origKey: key || e.date, title: s.title, category: e.category, allDay: e.allDay, date: s.date, startTime: s.startTime || '09:00', endTime: s.endTime || '', endDate: scope==='one' && occ ? occ.endDate : e.endDate, tz: e.tz, endTz: e.endTz, location: s.location, notes: s.notes, bookingRef: e.bookingRef,
         cName: e.contact.name, cPhone: e.contact.phone, cEmail: e.contact.email, freq: e.recurrence.freq, interval: e.recurrence.interval, until: e.recurrence.until, offsets: e.reminders.offsets.slice(), count: e.recurrence.count };
     }
     ui.formErr = []; ui.view = 'eventForm'; window.scrollTo(0, 0); ui.focus = '#f-title';
@@ -210,6 +210,13 @@
     const F = collect(f); ui.form = F; const errs = validate(F);
     if (errs.length) { ui.formErr = errs; window.scrollTo(0, 0); return; }
     const S = LB.S, old = F.id ? ev(F.id) : null;
+    if(old && old.workKind && window.LBWork) {
+      const candidate=C.cleanEvent(toRaw(F,old));
+      if(candidate){if(F.scope==='one'){candidate.recurrence={freq:'none',interval:1,until:'',count:0};candidate.exceptions={};}
+        const warnings=window.LBWork.warnings(S,candidate);
+        if(warnings.length&&!await LB.confirm('Work schedule checks',warnings.map(x=>'<p class="note">'+esc(x)+'</p>').join(''),'Save anyway'))return false;
+      }
+    }
     if (F.mode === 'edit' && !old) { ui.view = null; return; }
     if (F.scope === 'one') {
       const ex = Object.assign({}, old.exceptions[F.origKey] || {}); delete ex.cancelled; const wasC = (old.exceptions[F.origKey] || {}).cancelled;
