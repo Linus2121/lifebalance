@@ -1,5 +1,5 @@
 /* LifeBalance service worker: offline cache (network-first) and Web Push display. */
-const CACHE = 'lifebalance-work-15';
+const CACHE = 'lifebalance-work-16';
 const ASSETS = ['./', 'index.html', 'styles.css', 'logo.png', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'config.js', 'js/merge.js', 'js/sync.js', 'js/core.js', 'js/meals.js', 'js/state.js', 'js/region.js', 'js/work.js', 'js/views-work.js', 'js/views-core.js', 'js/views-events.js', 'js/views-wellness.js', 'js/reminders.js', 'js/calendar.js', 'js/settings.js', 'js/main.js'];
 
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).catch(() => {}).then(() => self.skipWaiting())); });

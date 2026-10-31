@@ -14,7 +14,8 @@ function serve() {
   });
 }
 async function launch() {
-  return chromium.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', headless: true });
+  // CHROME_PATH overrides; otherwise use the installed Chrome on Windows, macOS or Linux.
+  return chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH, headless: true } : { channel: 'chrome', headless: true });
 }
 async function newPage(browser, url, mobile, init) {
   const ctx = await browser.newContext(mobile ? { viewport: { width: 375, height: 740 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } : { viewport: { width: 1280, height: 800 } });

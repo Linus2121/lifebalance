@@ -1,13 +1,38 @@
-name: Android debug build
+name: Tests and Android debug build
 on:
   push:
     branches: [main]
-    paths: ['android/**', 'mobile/**', 'scripts/**', 'js/**', 'index.html', '*.css', 'package*.json', 'capacitor.config.json', '.github/workflows/android.yml']
+    paths: ['android/**', 'mobile/**', 'scripts/**', 'js/**', 'server/**', 'tests/**', 'index.html', 'sw.js', 'config.js', 'manifest.webmanifest', '*.css', 'package*.json', 'capacitor.config.json', '.github/workflows/android.yml']
+  pull_request:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
+  app-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+  server-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+        working-directory: server
+      - run: npm test
+        working-directory: server
   android:
+    needs: [app-tests, server-tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,9 +50,26 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
       - run: npm ci
-      - run: npm test
       - run: npm run android:sync
+      # A stable test key lets each new APK install over the previous one and keep its data.
+      # Without the secret, the runner's throwaway debug key is used and the APK cannot update earlier builds.
+      - name: Restore stable test signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.LB_TEST_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/lb-test.jks"
+            echo "LB_TEST_KEYSTORE_FILE=$RUNNER_TEMP/lb-test.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::LB_TEST_KEYSTORE_B64 is not set. This APK uses a one-off debug key and will not install over earlier builds. Export data before reinstalling."
+          fi
       - run: bash android/gradlew -p android assembleDebug
+        env:
+          LB_TEST_KEYSTORE_PASSWORD: ${{ secrets.LB_TEST_KEYSTORE_PASSWORD }}
+          LB_TEST_KEY_ALIAS: ${{ secrets.LB_TEST_KEY_ALIAS }}
+          LB_TEST_KEY_PASSWORD: ${{ secrets.LB_TEST_KEY_PASSWORD }}
+      - run: rm -f "$RUNNER_TEMP/lb-test.jks"
+        if: always()
       - uses: actions/upload-artifact@v4
         with:
           name: LifeBalance-debug-APK

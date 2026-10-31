@@ -103,7 +103,7 @@
     h += `<section class="card" aria-labelledby="dmH"><h2 id="dmH">\ud83e\uddea Demo mode</h2><p class="small">Try the app with sample data. Demo data is kept separately and never changes or overwrites your own data.</p>
       <div class="row">${LB.D.demo ? '<button type="button" class="btn" data-a="exitDemo">Exit demo</button><button type="button" class="btn alt" data-a="resetDemo">Reset demo data</button>' : '<button type="button" class="btn" data-a="enterDemoA">Start demo mode</button>'}</div></section>`;
 
-    h += `<section class="card" aria-labelledby="abH"><h2 id="abH">About</h2><p class="small">LifeBalance \u00b7 last updated ${C.APP_UPDATED}. LifeBalance gives general wellbeing information and is not medical advice. Steps, wearables and food photos are not supported; all fitness and food logging is manual.</p></section>`;
+    h += `<section class="card" aria-labelledby="abH"><h2 id="abH">About</h2><p class="small">LifeBalance ${C.APP_VERSION} \u00b7 last updated ${C.APP_UPDATED}. LifeBalance gives general wellbeing information and is not medical advice. Steps, wearables and food photos are not supported; all fitness and food logging is manual.</p></section>`;
     return h;
   };
 
