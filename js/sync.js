@@ -10,7 +10,7 @@
   const getBase = () => { try { return JSON.parse(localStorage.getItem(BASE_KEY)) || {}; } catch (e) { return {}; } };
   const setBase = v => { try { localStorage.setItem(BASE_KEY, JSON.stringify(v)); } catch (e) { /* base is best effort */ } };
   const status = (st, err) => { D.sync.status = st; D.sync.error = err || ''; if (st === 'ok') D.sync.lastAt = Date.now(); LB.saveD(); footer(); if (LB.ui.view === 'settings' && !document.activeElement.matches('input')) LB.render(); };
-  const footer = () => { const el = document.querySelector('footer .small'); if (el) el.textContent = 'Last updated ' + C.APP_UPDATED + (D.account ? ' \u00b7 Signed in: your data is also stored, encrypted, on the sync server' : ' \u00b7 Your data stays on this device'); };
+  const footer = () => { const el = document.querySelector('footer .small'); if (el) el.textContent = 'Version ' + C.APP_VERSION + ' \u00b7 Last updated ' + C.APP_UPDATED + (D.account ? ' \u00b7 Signed in: your data is also stored, encrypted, on the sync server' : ' \u00b7 Your data stays on this device'); };
 
   async function call(path, method, body) {
     const h = { 'Content-Type': 'application/json' }; if (D.account) h.Authorization = 'Bearer ' + D.account.token;
@@ -72,6 +72,7 @@
 
   // First connection of this browser: never overwrite either side without asking.
   async function connect(email, token) {
+    if (!email || !token) return 'Sign-in did not return a session. Your data on this device is unchanged.';
     D.account = { email, token }; D.sync = { rev: 0, lastAt: 0, status: 'syncing', error: '' }; LB.saveD();
     const g = await call('/api/sync'); if (!g.ok) { D.account = null; LB.saveD(); return 'Signed in, but the cloud copy could not be read: ' + (g.j.error || g.status); }
     const hasLocal = !isEmpty(LB.personal), cloud = g.j.data;
@@ -86,23 +87,59 @@
     if (!hasLocal) { LB.stashBackup(K.BK_IMPORT); setBase(cloud); applyLocal(norm(cloud)); status('ok'); return ''; }
     const v = await LB.ask({ title: 'Combine your data?', body: '<p>This browser and your cloud account both contain data. Nothing is replaced until you choose.</p>', buttons: [{ label: 'Combine both (recommended)', value: 'merge' }, { label: 'Use the cloud copy (a backup of this browser is kept)', value: 'cloud', cls: 'alt' }, { label: 'Cancel and sign out', value: null, cls: 'alt' }] });
     if (!v) { await call('/api/account/logout', 'POST'); D.account = null; D.sync = { rev: 0, lastAt: 0, status: 'off', error: '' }; LB.saveD(); return ''; }
-    LB.stashBackup(K.BK_IMPORT);
+    // Never change local records unless a safety copy was saved first.
+    if (!LB.stashBackup(K.BK_IMPORT)) { await call('/api/account/logout', 'POST'); D.account = null; D.sync = { rev: 0, lastAt: 0, status: 'off', error: '' }; LB.saveD(); return 'Not connected: a safety copy of this device could not be saved. Export a backup and free some storage, then try again.'; }
     if (v === 'cloud') { setBase(cloud); applyLocal(norm(cloud)); status('ok'); } else { setBase({}); await S.run(); }
     return '';
   }
-  const isEmpty = s => !(s.tasks.length || s.habits.some(h => !h.builtin) || Object.keys(s.logs || {}).length || (s.journal || []).length || s.events.length || s.fitness.workouts.length || s.fitness.weights.length || Object.keys(s.food.diary || {}).length || Object.keys(s.food.plan || {}).length || s.food.custom.length);
+  // Every persistent personal collection counts, so a first sign-in never replaces records without asking.
+  const isEmpty = s => !(s.tasks.length || s.habits.some(h => !h.builtin) || Object.keys(s.logs || {}).length || (s.journal || []).length || s.events.length || s.fitness.workouts.length || s.fitness.weights.length || (s.fitness.plan || []).length || Object.keys(s.food.diary || {}).length || Object.keys(s.food.plan || {}).length || s.food.custom.length || (s.food.favourites || []).length || (s.food.shopping || []).length || s.work.allowances.length || s.work.leave.length || [...s.work.workingDays].sort().join() !== '1,2,3,4,5');
+  S.isEmpty = isEmpty;
 
   async function auth(kind, f) {
     const email = f.email.value.trim(), pw = f.password.value; if (!email || !pw) { LB.toast('Enter your email and password.'); return false; }
     LB.toast(kind === 'register' ? 'Creating account\u2026' : 'Signing in\u2026');
     let r; try { r = await call('/api/account/' + kind, 'POST', { email, password: pw }); } catch (e) { LB.toast('Could not reach the sync server.'); return false; }
-    if (!r.ok) { LB.toast(r.j.error || 'Sign-in failed (' + r.status + ').'); return false; }
+    if (!r.ok) {
+      LB.toast(r.j.error || 'Sign-in failed (' + r.status + ').');
+      if (r.j.unverified) { step = { kind: 'verify', email, pw }; LB.render(); }
+      return false;
+    }
     f.password.value = '';
-    const err = await connect(r.j.email, r.j.token); if (err) LB.toast(err); else LB.toast('Signed in.');
+    // Registration returns no session: the emailed code must be entered first.
+    if (r.j.needsVerification || !r.j.token) { step = { kind: 'verify', email: r.j.email || email, pw }; LB.toast('Account created. Enter the code we emailed to ' + (r.j.email || email) + '.'); LB.render(); return false; }
+    return finish(r.j.email, r.j.token);
+  }
+  async function finish(email, token) {
+    step = null;
+    const err = await connect(email, token); if (err) LB.toast(err); else if (D.account) LB.toast('Signed in.');
     LB.render(); return false;
   }
+  // Verification and reset steps live in memory only; the password is kept for "Resend code" and never saved.
+  let step = null;
+  const post = async (path, body) => { try { return await call(path, 'POST', body); } catch (e) { return { ok: false, status: 0, j: { error: 'Could not reach the sync server.' } }; } };
   SB.acctLogin = f => auth('login', f);
   A.acctRegister = async el => { const f = el.closest('form'); return auth('register', f); };
+  SB.acctVerify = async f => {
+    const code = f.code.value.replace(/\s+/g, ''); if (!code) { LB.toast('Enter the code from the email.'); return false; }
+    const r = await post('/api/account/verify', { email: step.email, code });
+    if (!r.ok || !r.j.token) { LB.toast(r.j.error || 'That code did not work. Check it or resend a new one.'); return false; }
+    return finish(r.j.email || step.email, r.j.token);
+  };
+  A.acctResend = async () => { if (!step) return false; const r = await post('/api/account/resend', { email: step.email, password: step.pw }); LB.toast(r.ok ? 'If the account is waiting for verification, a new code has been sent.' : r.j.error || 'Could not resend the code.'); return false; };
+  A.acctForgot = el => { const f = el.closest('form'); step = { kind: 'forgot', email: (f && f.email.value.trim()) || '' }; return true; };
+  SB.acctForgot = async f => {
+    const email = f.email.value.trim(); if (!email) { LB.toast('Enter your email.'); return false; }
+    const r = await post('/api/account/forgot', { email });
+    if (!r.ok) { LB.toast(r.j.error || 'Could not send a reset code.'); return false; }
+    step = { kind: 'reset', email }; LB.toast('If an account exists for that email, a reset code has been sent.'); LB.render(); return false;
+  };
+  SB.acctReset = async f => {
+    const r = await post('/api/account/reset', { email: step.email, code: f.code.value.replace(/\s+/g, ''), newPassword: f.newp.value });
+    if (!r.ok) { LB.toast(r.j.error || 'Could not reset the password.'); return false; }
+    step = null; LB.toast('Password reset. Sign in with your new password.'); LB.render(); return false;
+  };
+  A.acctBack = () => { step = null; return true; };
   A.syncNow = async () => { LB.toast('Syncing\u2026'); await S.run(); LB.toast(D.sync.status === 'ok' ? 'Synced.' : D.sync.error || 'Not synced.'); return false; };
   A.signOut = async () => { try { await call('/api/account/logout', 'POST'); } catch (e) { /* signed out locally anyway */ } D.account = null; D.sync = { rev: 0, lastAt: 0, status: 'off', error: '' }; D.syncConflicts = []; setBase({}); LB.saveD(); footer(); LB.toast('Signed out. Your data stays on this device.'); };
   SB.changePw = async f => {
@@ -150,10 +187,19 @@
       if (S.serviceState === 'unchecked') S.checkService();
       return h + '<p class="small">' + (S.serviceState === 'checking' ? 'Checking account service...' : 'Account service is unavailable. Keep using LifeBalance on this device; your local records remain available.') + '</p><button type="button" class="btn alt" data-a="checkAccountService">Check connection</button><p class="muted small">Use Export backup in Your data to keep a portable copy. Online sync and automatic cloud backups require a connected account service.</p></section>';
     }
+    if (!D.account && step && step.kind === 'verify') return h + `<p class="small">We emailed an 8-digit code to <b>${esc(step.email)}</b>. Enter it to finish signing in. Codes expire after 15 minutes.</p>
+      <form data-s="acctVerify"><label for="acV">Verification code</label><input id="acV" name="code" inputmode="numeric" autocomplete="one-time-code" required maxlength="16">
+      <div class="row"><button class="btn">Verify and sign in</button><button type="button" class="btn alt" data-a="acctResend">Resend code</button><button type="button" class="btn alt" data-a="acctBack">Back</button></div></form></section>`;
+    if (!D.account && step && step.kind === 'forgot') return h + `<p class="small">Enter your account email and we will send a reset code. Data on this device is not changed.</p>
+      <form data-s="acctForgot"><label for="acFE">Email</label><input type="email" id="acFE" name="email" autocomplete="email" required value="${esc(step.email)}">
+      <div class="row"><button class="btn">Send reset code</button><button type="button" class="btn alt" data-a="acctBack">Back</button></div></form></section>`;
+    if (!D.account && step && step.kind === 'reset') return h + `<p class="small">Enter the code we emailed to <b>${esc(step.email)}</b> and choose a new password. Other devices will be signed out.</p>
+      <form data-s="acctReset"><label for="acRC">Reset code</label><input id="acRC" name="code" inputmode="numeric" autocomplete="one-time-code" required maxlength="16"><label for="acRP">New password (10+ characters)</label><input type="password" id="acRP" name="newp" autocomplete="new-password" required minlength="10">
+      <div class="row"><button class="btn">Reset password</button><button type="button" class="btn alt" data-a="acctBack">Back</button></div></form></section>`;
     if (!D.account) {
-      h += `<p class="small">Optional. Sign in to use LifeBalance on several phones and computers. Without an account your data stays only in this browser. Needs a sync server (see the README); there is no email recovery, so keep your password safe.</p>
+      h += `<p class="small">Optional. Sign in to use LifeBalance on several phones and computers. Without an account your data stays only in this browser. Needs a sync server (see the README). New accounts confirm their email with a code.</p>
       <form data-s="acctLogin"><label for="acE">Email</label><input type="email" id="acE" name="email" autocomplete="email" required><label for="acP">Password (10+ characters)</label><input type="password" id="acP" name="password" autocomplete="current-password" required minlength="10">
-      <div class="row"><button class="btn">Sign in</button><button type="button" class="btn alt" data-a="acctRegister">Create account</button></div></form>
+      <div class="row"><button class="btn">Sign in</button><button type="button" class="btn alt" data-a="acctRegister">Create account</button><button type="button" class="btn alt" data-a="acctForgot">Forgot password?</button></div></form>
       <p class="muted small">When you first connect, you choose whether to upload or combine existing data; nothing is replaced without asking.</p></section>`;
       return h;
     }

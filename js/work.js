@@ -2,13 +2,15 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./core'));else root.LBWork=factory(root.LBCore);})(typeof window!=='undefined'?window:globalThis,function(C){
   const end=o=>C.zonedToUtc(o.endDate||o.date,o.endTime||o.startTime,o.endTz||o.tz);
   const occurrences=(S,from,to)=>C.allOccurrences(S,from,to).filter(o=>o.workKind&&!o.cancelled);
+  const weekOf=d=>C.addDays(d,-((C.parseDate(d).getUTCDay()+6)%7));
+  // Weeks (Monday-Sunday) with a scheduled shift follow the roster; other weeks use the chosen working days.
   function workingDates(S,start,finish){
     if(!C.isDate(start)||!C.isDate(finish)||finish<start||C.diffDays(start,finish)>366)return [];
-    const shifts=occurrences(S,start,finish).filter(o=>o.workKind==='shift');
+    const shiftDays=new Set(occurrences(S,weekOf(start),C.addDays(weekOf(finish),6)).filter(o=>o.workKind==='shift').map(o=>o.date));
+    const rostered=new Set([...shiftDays].map(weekOf));
     const out=[];
     for(let d=start;d<=finish;d=C.addDays(d,1)){
-      const hasPattern=S.events.some(e=>e.workKind==='shift'&&!e.cancelled);
-      if(hasPattern?shifts.some(o=>o.date===d):S.work.workingDays.includes(C.parseDate(d).getUTCDay()))out.push(d);
+      if(rostered.has(weekOf(d))?shiftDays.has(d):S.work.workingDays.includes(C.parseDate(d).getUTCDay()))out.push(d);
     }
     return out;
   }
@@ -16,10 +18,11 @@
     if(!C.isDate(start)||!C.isDate(finish)||finish<start||C.diffDays(start,finish)>366)throw Error('Choose a valid range of up to 367 dates.');
     let dates=workingDates(S,start,finish),total=override===''||override==null?dates.length:Number(override);
     if(!Number.isFinite(total)||total<0||total>C.diffDays(start,finish)+1)throw Error('Days to deduct must be between zero and the number of dates in the range.');
-    if(total>dates.length){dates=[];for(let d=start;d<=finish;d=C.addDays(d,1))dates.push(d);}
+    // Working dates are used first; only the remainder falls on other dates in the range, earliest first.
+    if(total>dates.length){const used=new Set(dates);for(let d=start;d<=finish;d=C.addDays(d,1))if(!used.has(d))dates.push(d);}
     const allocations=[];let left=total;
     dates.forEach(date=>{if(left>0){const days=Math.min(1,left);allocations.push({date,days});left=Math.round((left-days)*1000)/1000;}});
-    return allocations;
+    return allocations.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
   }
   function balance(S,year,ignore){
     const dates=new Map();S.work.leave.filter(l=>l.id!==ignore).forEach(l=>l.allocations.forEach(a=>{if(+a.date.slice(0,4)===+year)dates.set(a.date,Math.max(dates.get(a.date)||0,a.days));}));

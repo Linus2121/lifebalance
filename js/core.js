@@ -14,7 +14,7 @@
   const WORKOUT_TYPES = { walking: 'Walking', running: 'Running', cycling: 'Cycling', gym: 'Gym session', custom: 'Custom activity' };
   const MEAL_SLOTS = ['breakfast', 'lunch', 'dinner', 'snack'];
   const ALL_DAY_TIME = '09:00';
-  const APP_UPDATED = '2026-10-30';
+  const APP_VERSION = '1.1.1', APP_UPDATED = '2026-10-31';
 
   /* ---------- dates (date keys are YYYY-MM-DD, handled in UTC so they never shift) ---------- */
   const pad = n => String(n).padStart(2, '0');
@@ -433,7 +433,7 @@
   }
 
   return {
-    CATS, CAT_ICONS, PRESET_OFFSETS, WORKOUT_TYPES, MEAL_SLOTS, ACHIEVEMENTS, APP_UPDATED, ALL_DAY_TIME,
+    CATS, CAT_ICONS, PRESET_OFFSETS, WORKOUT_TYPES, MEAL_SLOTS, ACHIEVEMENTS, APP_VERSION, APP_UPDATED, ALL_DAY_TIME,
     pad, parseDate, isDate, isTime, addDays, diffDays, dayOfWeek, localDateKey, addMonths, weekStart,
     isTz, dateInTz, zonedToUtc, tzOffsetMs, uid, offsetLabel, offsetPhrase, cleanOffsets,
     builtinHabits, habitActive, goalOn, habitValue, habitManual, habitPct, dayHabitPct, habitStreak, activeOn, activeStreak, overdueTasks, dayTasks, dayEntries, workoutMinutes,

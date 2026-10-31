@@ -28,7 +28,7 @@ refreshTone();
 const settings=LB.views.settings;
 LB.views.settings=()=>{
  let h=settings();const p=LB.D.nativeRem;
- h=h.replace('</h2>','</h2><span class="badge">Android app 1.1.0</span>');
+ h=h.replace('</h2>','</h2><span class="badge">Android app ' + LB.C.APP_VERSION + '</span>');
  h=h.replace(/Reminders always appear inside the app while it is open\.[\s\S]*?<\/p>/,'Android schedules reminders on this phone, including when the app is closed. No reminder server is required.</p>');
  h=h.replace(/Limits: closed-app reminders need HTTPS[\s\S]*?<\/details>/,'Limits: the next 45 days (up to 300 alerts) are scheduled. Reopen the app regularly to refresh schedules, especially after time-zone changes. Android battery restrictions, force-stop and notification settings can delay or prevent alerts. Snooze actions open LifeBalance to schedule the next alert. Use Allow precise reminder timing for exact alarms where Android permits; other device restrictions still apply. Real-device delivery has not been verified.</p>');
  h=h.replace(/<p class="err" role="alert">[\s\S]*?<\/p>/g,m=>m.includes('reminder service')?'':m);
