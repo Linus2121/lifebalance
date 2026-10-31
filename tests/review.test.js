@@ -123,4 +123,19 @@ test('every version label matches package.json',()=>{
   assert.equal(C.APP_VERSION,v);assert.match(read('index.html'),new RegExp('Version '+v.replace(/\./g,'\\.')+' · Last updated '+C.APP_UPDATED));
   assert.match(read('android/app/build.gradle'),new RegExp('versionName "'+v.replace(/\./g,'\\.')+'"'));
   assert.match(read('mobile/sound-panel.cjs'),new RegExp('Android app '+v.replace(/\./g,'\\.')));
+  // Browsers cache scripts by URL, so every ?v= tag must match this release and the service-worker cache.
+  const cache=/const CACHE = 'lifebalance-work-(\d+)'/.exec(read('sw.js'))[1],tags=[...read('index.html').matchAll(/\?v=([\w-]+)/g)].map(m=>m[1]);
+  assert.ok(tags.length>10);assert.deepEqual([...new Set(tags)],[C.APP_UPDATED.replace(/-/g,'')+'-work-'+cache]);
+});
+
+test('Add appointment under the category filters opens the form with the selected category',()=>{
+  const {LB}=app(state(),{routes:{}});
+  assert.match(LB.views.events(),/data-a="newEvent"[^>]*>➕ Add appointment</);
+  for(const c of C.CATS){
+    LB.ui.cat='';LB.actions.evCat({dataset:{arg:c}});
+    const h=LB.views.events();
+    assert.ok(h.indexOf('aria-label="Filter by category"')<h.indexOf('data-a="newEvent"')&&h.indexOf('data-a="newEvent"')<h.indexOf('id="evResults"'));
+    assert.ok(h.includes('Add '+c+' appointment'));
+    LB.actions.newEvent();assert.equal(LB.ui.form.category,c);LB.ui.view=null;
+  }
 });

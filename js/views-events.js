@@ -65,7 +65,7 @@
       <section class="card"><div class="seg" role="group" aria-label="View">${[['upcoming', 'Upcoming'], ['past', 'Past'], ['cal', 'Calendar']].map(v => `<button type="button" data-a="evView" data-arg="${v[0]}" aria-pressed="${ui.evView === v[0]}">${v[1]}</button>`).join('')}</div>
       <div class="field"><label for="evq">Search events</label><input type="search" id="evq" value="${esc(ui.q)}" data-i="evSearch" placeholder="Title, place or notes" autocomplete="off"></div>
       <div class="seg" role="group" aria-label="Filter by category">${C.CATS.map(c => `<button type="button" data-a="evCat" data-arg="${c}" aria-pressed="${ui.cat === c}">${icon(c)} ${c}</button>`).join('')}</div>
-      <button type="button" class="btn big" data-a="newEvent" style="margin:14px 0">➕ Add appointment</button>
+      <button type="button" class="btn big" data-a="newEvent" style="margin:14px 0">➕ Add ${ui.cat ? esc(ui.cat) + ' ' : ''}appointment</button>
       <div id="evResults">${listHtml()}</div></section>`;
   };
 
