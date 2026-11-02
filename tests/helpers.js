@@ -23,8 +23,12 @@ async function newPage(browser, url, mobile, init) {
   const page = await ctx.newPage(), errors = [];
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  // Skip the first-launch welcome screen; tests start on Home like a returning user.
+  await page.addInitScript(() => { try { const d = JSON.parse(localStorage.getItem('lifebalance.device') || '{}'); if (!d.welcomed) { d.welcomed = true; localStorage.setItem('lifebalance.device', JSON.stringify(d)); } } catch (e) { /* storage blocked */ } });
   if (init) await page.addInitScript(init);
   await page.goto(url); await page.waitForSelector('#app h2, #app section, #app .card');
   return { page, ctx, errors };
 }
-module.exports = { serve, launch, newPage, ROOT };
+// Phones show some sections under More; wide screens show them all in the top bar.
+async function goTab(page, t) { const b = page.locator(`#tabs [data-arg=${t}]`); if (await b.isVisible()) return b.click(); await page.click('#tabs [data-arg=more]'); await page.click(`main [data-a=go][data-arg=${t}]`); }
+module.exports = { serve, launch, newPage, goTab, ROOT };

@@ -100,6 +100,9 @@ Powered by Lamb Technologies
 - Settings records the last requested backup export and encourages regular exports; downloading is controlled by the browser.
 - Validation: 37 existing tests plus 4 regional/measurement tests pass. Real-device push, signed-in cross-device sync, native packaging and full translations are not verified or completed by this update.
 
+## Premium redesign (1.2.0, updated 2026-11-02)
+New midnight-navy design from the approved Figma screens: bottom navigation with a quick-add button, a new Home dashboard, category chips on Events and a first-launch welcome screen. All features and data carry over. See [redesign notes and test status](docs/REDESIGN.md).
+
 ## Review fixes (1.1.1, updated 2026-10-31)
 Data-protection, leave, account-verification and reminder-recovery fixes from the 30 Oct 2026 code review. See [review fixes and platform status](docs/REVIEW-FIXES.md).
 

@@ -101,16 +101,37 @@
     const up = C.allOccurrences(S, t, C.addDays(t, 7)).filter(o => !o.cancelled).slice(0, 4);
     const wk = S.fitness.workouts.filter(x => x.date === t), meals = S.food.diary[t] || [];
     const hist = [...new Set(S.tasks.filter(x => x.date < t).map(x => x.date))].sort().reverse().slice(0, 30);
-    const hour = new Date().getHours(), greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-    let h = `<div class="welcome"><div><p class="eyebrow">Your day, in balance</p><h2>${greeting}</h2><p>${LB.fmtDate(t, true)}</p></div><button type="button" class="btn" data-a="quickAdd" aria-haspopup="dialog">\uff0b Add</button></div>`;
-    h += `<section class="card balance" aria-label="Today's habit progress"><div><small>SMALL STEPS. REAL PROGRESS.</small><h2>Daily balance</h2><p>Your habits, at your pace.</p><small>${hp == null ? 'Set a habit goal to get started' : 'Progress towards today\u2019s habit goals'}</small></div><div class="balance-ring" style="--progress:${hp == null ? 0 : LB.pct(hp)}%"><span>${hp == null ? '\u2013' : LB.pct(hp) + '%'}</span></div></section>`;
+    const hour = new Date().getHours(), part = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening', svg = LB.svg;
+    const dt = C.parseDate(t), ws = C.weekStart(t), weekWk = LB.weekWorkouts(S, ws), goals = S.fitness.goals;
+    const wkPct = goals.weeklyWorkouts > 0 ? Math.min(1, weekWk.length / goals.weeklyWorkouts) : null, mins = weekWk.reduce((a, x) => a + (x.minutes || 0), 0);
+    const wOn = w && C.habitActive(w, t), wVal = wOn ? C.habitValue(S, t, w) : 0, wGoal = wOn ? C.goalOn(w, t) : 0;
+    const evToday = C.allOccurrences(S, t, t).filter(o => !o.cancelled).length, openTasks = todays.filter(x => !x.done).length;
+    const ring = (p, c, icon, val, sub) => `<div class="ring" style="--p:${Math.round(Math.min(1, p || 0) * 100)};--c:var(--${c})" role="img" aria-label="${esc(val + ' ' + sub)}"><div>${svg(icon)}<b>${esc(val)}</b><small>${esc(sub)}</small></div></div>`;
+    let h = `<div class="greet"><div><h2>Good <span class="hl">${part}</span></h2><p>Here\u2019s your day at a glance.</p></div><div class="datechip">${svg('calendar')}<div>${dt.toLocaleDateString(undefined, { timeZone: 'UTC', weekday: 'short' })}<b>${dt.toLocaleDateString(undefined, { timeZone: 'UTC', day: 'numeric', month: 'short' })}</b></div></div></div>`;
+    h += `<div class="tiles">
+      <button type="button" class="tile" style="--c:var(--violet-l)" data-a="go" data-arg="events">${svg('calendar')}<div><b>${evToday}</b><span>Event${evToday === 1 ? '' : 's'} today</span></div></button>
+      <button type="button" class="tile" style="--c:var(--green)" data-a="focusTasks">${svg('check')}<div><b>${openTasks}</b><span>Task${openTasks === 1 ? '' : 's'} left</span></div></button>
+      <button type="button" class="tile" style="--c:var(--pink)" data-a="goWellness" data-arg="fitness">${svg('heart')}<div><b>${wkPct == null ? '\u2013' : LB.pct(wkPct) + '%'}</b><span>Fitness</span></div></button>
+      <button type="button" class="tile" style="--c:var(--cyan)" data-a="go" data-arg="habits">${svg('drop')}<div><b>${wOn ? LB.num(wVal) + '/' + LB.num(wGoal) : '\u2013'}</b><span>Water</span></div></button></div>`;
+    h += `<p class="small" id="remNote" role="status">${svg('bell')} ${esc(LB.rem && LB.rem.deliveryNote ? LB.rem.deliveryNote() : '')} <button type="button" class="btn alt sm" data-a="openSettings">Reminder settings</button></p>`;
 
-    h += `<p class="small muted" id="remNote" role="status">\ud83d\udd14 ${esc(LB.rem && LB.rem.deliveryNote ? LB.rem.deliveryNote() : '')} <button type="button" class="btn alt sm" data-a="openSettings">Reminder settings</button></p>`;
-    h += LB.workToday ? LB.workToday() : '';
     const nowMs = Date.now(), nxt = C.allOccurrences(S, t, C.addDays(t, 120)).filter(o => !o.cancelled && C.startInstant(o) > nowMs - 36e5).sort((a, b) => C.startInstant(a) - C.startInstant(b))[0];
-    h += `<section class="card star" aria-labelledby="nxH"><h2 id="nxH">\ud83d\udcc5 Next appointment</h2>`;
-    h += nxt ? LB.occRow(nxt, { compact: true }) + `<p class="small muted">${esc(countdown(C.startInstant(nxt) - nowMs))}</p>` + (up.filter(o => !(o.evId === nxt.evId && o.key === nxt.key)).length ? '<h3>Later this week</h3>' + up.filter(o => !(o.evId === nxt.evId && o.key === nxt.key)).map(o => LB.occRow(o, { compact: true })).join('') : '') + `<button type="button" class="btn alt sm" data-a="go" data-arg="events">See all events</button>` : `<p class="muted small">No appointments coming up. <button type="button" class="btn sm" data-a="newEvent">Add appointment</button></p>`;
-    h += '</section>';
+    let next = `<section class="card hero next o1" aria-labelledby="nxH"><div class="card-h">${svg('calendar')}<h2 id="nxH">Next appointment</h2></div>`;
+    next += nxt ? LB.occRow(nxt, { compact: true }) + `<p class="small muted">${esc(countdown(C.startInstant(nxt) - nowMs))}</p>` + (up.filter(o => !(o.evId === nxt.evId && o.key === nxt.key)).length ? '<h3>Later this week</h3>' + up.filter(o => !(o.evId === nxt.evId && o.key === nxt.key)).map(o => LB.occRow(o, { compact: true })).join('') : '') + `<button type="button" class="btn alt sm" data-a="go" data-arg="events">See all events</button>` : `<p class="muted small">No appointments coming up.</p><button type="button" class="btn sm" data-a="newEvent">Add appointment</button>`;
+    next += svg('steth', 'ill') + '</section>';
+
+    const W = window.LBWork, yr = +t.slice(0, 4), bal = W ? W.balance(S, yr) : null, shifts = W ? W.occurrences(S, ws, C.addDays(ws, 6)).filter(o => o.workKind === 'shift').length : 0;
+    let work = `<a class="card o2" href="#work" data-a="go" data-arg="work" aria-label="Work and leave: ${shifts} shift${shifts === 1 ? '' : 's'} this week${bal && bal.total ? ', ' + LB.num(bal.remaining) + ' leave days remaining' : ''}"><div class="leave"><div class="row" style="flex-wrap:nowrap">${svg('briefcase', 'lg')}<div><h2 style="margin:0">Work &amp; Leave</h2><div class="small" style="color:var(--text-2)">This week: ${shifts} shift${shifts === 1 ? '' : 's'}</div></div></div>`;
+    work += bal && bal.total ? `<div style="text-align:right"><div class="small muted">Leave remaining</div><div class="big">${LB.num(bal.remaining)} day${bal.remaining === 1 ? '' : 's'}</div></div></div><div class="bar"><i style="width:${Math.max(0, Math.min(100, bal.remaining / bal.total * 100))}%"></i></div><div class="small muted" style="margin-top:6px">${LB.num(bal.used)} of ${LB.num(bal.total)} days used in ${yr}</div>` : `</div><div class="small muted">Set your annual leave allowance in Work to track your balance.</div>`;
+    work += '</a>';
+
+    let health = `<section class="card o3" aria-labelledby="hwH"><div class="card-h">${svg('heart')}<h2 id="hwH">Health &amp; Wellness</h2><span class="small muted">This week</span></div><div class="rings">`;
+    health += ring(wkPct, 'green', 'dumbbell', goals.weeklyWorkouts > 0 ? weekWk.length + '/' + goals.weeklyWorkouts : String(weekWk.length), 'workouts');
+    health += ring(goals.weeklyMinutes > 0 ? mins / goals.weeklyMinutes : 0, 'orange', 'flame', String(mins), goals.weeklyMinutes > 0 ? '/' + goals.weeklyMinutes + ' min' : 'min');
+    health += wOn ? ring(wGoal ? wVal / wGoal : 0, 'cyan', 'drop', LB.num(wVal), '/' + LB.num(wGoal) + ' ' + w.unit) : '';
+    health += `</div><p class="row" style="justify-content:center;margin:12px 0 0"><button type="button" class="btn alt sm" data-a="goWellness" data-arg="fitness">Fitness</button><button type="button" class="btn alt sm" data-a="goWellness" data-arg="food">Food</button><button type="button" class="btn alt sm" data-a="go" data-arg="habits">Habits</button></p></section>`;
+    const balance = `<section class="card balance" aria-label="Today's habit progress"><div><p class="overline">Small steps. Real progress.</p><h2>Daily balance</h2><p>Your habits, at your pace.</p><small>${hp == null ? 'Set a habit goal to get started' : 'Progress towards today\u2019s habit goals'}</small></div><div class="balance-ring" style="--progress:${hp == null ? 0 : LB.pct(hp)}%"><span>${hp == null ? '\u2013' : LB.pct(hp) + '%'}</span></div></section>`;
+    h += `<div class="home-grid"><div class="main">${next}${LB.workToday ? LB.workToday() : ''}`;
     if (over.length) h += `<section class="card" aria-labelledby="ovH"><h2 id="ovH">\u23f0 Overdue tasks <span class="badge warn">${over.length}</span></h2>${over.map(x => taskRow(x, { move: true, showDate: true })).join('')}</section>`;
     // suggestions are shown below the daily priorities
     h += `<div class="grid2"><section class="card star" aria-labelledby="priH"><h2 id="priH">\u2b50 Top 3 priorities <span class="badge">${pri.length}/3</span></h2>`;
@@ -132,11 +153,34 @@
       
       <div class="stat"><b>${hp == null ? '\u2013' : LB.pct(hp) + '%'}</b>habit progress</div></div>
       <p><button type="button" class="btn alt sm" data-a="goWellness" data-arg="fitness">Fitness</button> <button type="button" class="btn alt sm" data-a="goWellness" data-arg="food">Food</button> <button type="button" class="btn alt sm" data-a="go" data-arg="habits">Habits</button></p></section>`;
+    h += `</div><div class="side">${work}${health}${balance}</div></div>`;
     h += `<details class="card"><summary>\ud83d\uddc2\ufe0f Task history (${hist.length} earlier day${hist.length === 1 ? '' : 's'})</summary>`;
     h += hist.length ? hist.map(d => { const a = S.tasks.filter(x => x.date === d); return `<div class="dayhead">${LB.fmtDate(d)} \u00b7 ${a.filter(x => x.done).length}/${a.length} done</div>` + a.map(x => taskRow(x, { move: !x.done })).join(''); }).join('') : '<p class="muted">Tasks from earlier days will appear here.</p>';
     return h + '</details>' + tipsHtml();
   };
   A.goWellness = el => { LB.ui.wtab = el.dataset.arg; LB.go('wellness'); return false; };
+  A.focusTasks = () => { const el = document.getElementById('taskTitle'); if (el) { el.scrollIntoView({ block: 'center' }); el.focus({ preventScroll: true }); } return false; };
+
+  /* ---------- More (phones): the sections that do not fit in the bottom bar ---------- */
+  V.more = function () {
+    const S = LB.S, t = LB.today(), svg = LB.svg, act = S.habits.filter(h => C.habitActive(h, t)), met = act.filter(h => C.habitPct(S, t, h) >= 1).length;
+    const tile = (tab, icon, c, name, sub) => `<button type="button" style="--c:var(--${c})" data-a="go" data-arg="${tab}">${svg(icon)}<span><b>${name}</b><small>${esc(sub)}</small></span></button>`;
+    const row = (a, icon, c, name, sub, arg) => `<button type="button" class="listrow" style="--c:var(--${c})" data-a="${a}"${arg ? ` data-arg="${arg}"` : ''}><span class="ico">${svg(icon)}</span><span class="body"><b>${name}</b><small>${esc(sub)}</small></span>${svg('right')}</button>`;
+    return `<h2>More</h2><div class="more-grid">${tile('wellness', 'pulse', 'green', 'Health &amp; Fitness', 'Workouts, weight, meals')}${tile('habits', 'task', 'violet-l', 'Habits', act.length ? met + ' of ' + act.length + ' done today' : 'Build daily habits')}${tile('journal', 'book', 'yellow', 'Journal', 'Mood and notes')}${tile('progress', 'chart', 'cyan', 'Progress', 'Stats and achievements')}</div>
+      <section class="card" style="padding-top:6px;padding-bottom:6px">${row('openSettings', 'settings', 'violet-l', 'Settings', 'Reminders, sounds, units, account')}${row('openAlerts', 'bell', 'pink', 'Alerts', 'Reminders that appeared recently')}${row('exportData', 'download', 'cyan', 'Export backup', 'Save a copy of your data')}${LB.D.demo ? row('exitDemo', 'sparkle', 'yellow', 'Exit demo mode', 'Return to your own data') : row('enterDemoA', 'sparkle', 'yellow', 'Try demo mode', 'Sample data; your own data is untouched')}</section>`;
+  };
+
+  /* ---------- Welcome (first launch only) ---------- */
+  V.welcome = function () {
+    const svg = LB.svg, f = (c, icon, name) => `<div style="--c:var(--${c})">${svg(icon)}${name}</div>`;
+    return `<section class="welcome-screen" aria-labelledby="wlcH"><div class="hero" aria-hidden="true"><svg viewBox="0 0 390 560" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="wsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1A1446"/><stop offset=".45" stop-color="#6B2E7A"/><stop offset=".72" stop-color="#F59E0B"/><stop offset=".85" stop-color="#FDE68A"/></linearGradient><radialGradient id="wsun"><stop offset="0" stop-color="#FFF7D6"/><stop offset=".35" stop-color="#FDE68A"/><stop offset="1" stop-color="#F59E0B" stop-opacity="0"/></radialGradient></defs><rect width="390" height="560" fill="url(#wsky)"/><circle cx="110" cy="250" r="90" fill="url(#wsun)"/><path d="M0 300 60 250 120 285 190 220 260 270 330 230 390 260V560H0Z" fill="#4C2A6B" opacity=".85"/><path d="M0 340 70 300 140 330 210 280 290 325 350 295 390 310V560H0Z" fill="#2E1E55"/><path d="M0 390 90 350 170 380 250 345 330 375 390 355V560H0Z" fill="#1B1A47"/><path d="M0 430 120 400 220 425 310 400 390 420V560H0Z" fill="#121638"/></svg></div>
+      <div class="inner">${LB.logoSvg(84)}<h1 id="wlcH">LifeBalance</h1><h2>Your All-in-One<br>Lifestyle Organizer</h2><p>Manage your time, health, work and personal life in one simple app.</p>
+      <div class="features">${f('violet-l', 'calendar', 'Appointments')}${f('blue-l', 'briefcase', 'Work &amp; Leave')}${f('green', 'pulse', 'Health &amp; Fitness')}${f('orange', 'task', 'Tasks &amp; Goals')}</div>
+      <button type="button" class="btn" data-a="getStarted">Get Started ${svg('right')}</button>
+      ${LB.sync && LB.sync.serviceState === 'ready' ? '<p class="small" style="margin:16px 0 0">Already have an account? <a href="#" data-a="welcomeSignIn">Sign In</a></p>' : ''}</div></section>`;
+  };
+  A.getStarted = () => { LB.D.welcomed = true; LB.saveD(); LB.ui.view = null; LB.go('today'); return false; };
+  A.welcomeSignIn = () => { LB.D.welcomed = true; LB.saveD(); LB.ui.view = 'settings'; LB.ui.focus = '#acE'; return true; };
 
   /* ---------- habits ---------- */
   A.habitStep = el => {

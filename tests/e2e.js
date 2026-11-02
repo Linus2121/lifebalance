@@ -1,4 +1,4 @@
-const { serve, launch, newPage } = require('./helpers');
+const { serve, launch, newPage, goTab } = require('./helpers');
 const assert = require('assert');
 let fails = 0;
 const step = async (name, fn) => { try { await fn(); console.log('  ok  ', name); } catch (e) { fails++; console.log('  FAIL', name, '-', e.message.split('\n').slice(0,6).join(' | ')); if (process.env.DBG && global.__page) console.log((await global.__page.locator('main').innerText()).slice(0, 1500)); } };
@@ -10,7 +10,7 @@ const ls = (page, k) => page.evaluate(k => JSON.parse(localStorage.getItem(k) ||
     console.log(mobile ? 'MOBILE 375px' : 'DESKTOP 1280px');
     const v1 = { tasks: [{ id: 't1', title: 'Old v1 task', done: false, date: '2020-01-01' }], habits: [], logs: {}, journal: [] };
     const { page, errors } = await newPage(browser, url, mobile, `if(!sessionStorage.seeded){sessionStorage.seeded=1;localStorage.setItem('lifebalance.v1',${JSON.stringify(JSON.stringify(v1))});}`);
-    const tab = t => page.click(`#tabs [data-arg=${t}]`); global.__page = page;
+    const tab = t => goTab(page, t); global.__page = page;
 
     await step('v1 data migrated and old task is overdue', async () => {
       assert.ok(await page.getByText('Old v1 task').first().isVisible());
@@ -81,7 +81,7 @@ const ls = (page, k) => page.evaluate(k => JSON.parse(localStorage.getItem(k) ||
     });
     await step('Today dashboard: next appointment, plan, water, quick add', async () => {
       await tab('today');
-      assert.ok(await page.locator('#nxH').isVisible(), 'nxH'); assert.ok(await page.locator('#nxH + .ev, #nxH ~ .ev').first().innerText().then(t => /GP check/.test(t)), 'gp');
+      assert.ok(await page.locator('#nxH').isVisible(), 'nxH'); assert.ok(await page.locator('.next .ev').first().innerText().then(t => /GP check/.test(t)), 'gp');
       assert.ok(/Starts in \d+ day/.test(await page.locator('main').innerText()));
       const fresh = await newPage(browser, url, mobile); const fp = fresh.page;
       const w0 = await fp.locator('#tdH ~ .row b').first().innerText();

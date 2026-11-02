@@ -1,11 +1,9 @@
-/* Native-only layout adjustments. Last updated 2026-10-29. */
-html{background:#070e12;scroll-padding-bottom:100px}
+/* Native-only layout adjustments. Last updated 2026-11-02. */
+html{background:#0B1026;scroll-padding-bottom:110px}
 body{min-height:100dvh;overflow-wrap:break-word}
-header.top{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
-.wrap{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
+header.top{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+.wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
 input,select,textarea{font-size:16px}
-button,a,input,select,textarea{-webkit-tap-highlight-color:rgba(66,222,210,.15)}
-nav.tabs{padding-left:max(4px,env(safe-area-inset-left));padding-right:max(4px,env(safe-area-inset-right))}
+button,a,input,select,textarea{-webkit-tap-highlight-color:rgba(139,61,255,.18)}
+nav.tabs{left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right))}
 .modal{max-height:calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
-@media(max-width:480px){header.top{flex-wrap:wrap}header.top .ttl{flex:1;min-width:135px}header.top p{font-size:.8rem}}
-@media(prefers-reduced-motion:reduce){header.top .logo{animation:none!important}}
