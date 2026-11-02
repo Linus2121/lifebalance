@@ -59,6 +59,11 @@
   A.calSel = el => { ui.calSel = el.dataset.arg; };
   A.evView = el => { ui.evView = el.dataset.arg; };
   A.evCat = el => { ui.cat = !el.dataset.arg || ui.cat === el.dataset.arg ? '' : el.dataset.arg; };
+  // Re-rendering resets the chip row to the start; scroll the row (not the page) so the chosen chip stays visible.
+  LB.hooks.push(() => {
+    const row = document.querySelector('.seg.chips'), on = row && row.querySelector('[aria-pressed=true]');
+    if (on && row.scrollWidth > row.clientWidth) row.scrollLeft = Math.max(0, on.offsetLeft - row.offsetLeft - (row.clientWidth - on.offsetWidth) / 2);
+  });
   LB.inputs.evSearch = el => { ui.q = el.value; const r = document.getElementById('evResults'); if (r) r.innerHTML = listHtml(); };
   V.events = function () {
     return `<h2>Events &amp; Appointments</h2>
