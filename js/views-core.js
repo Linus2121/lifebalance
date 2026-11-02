@@ -177,7 +177,7 @@
       <div class="inner">${LB.logoSvg(84)}<h1 id="wlcH">LifeBalance</h1><h2>Your All-in-One<br>Lifestyle Organizer</h2><p>Manage your time, health, work and personal life in one simple app.</p>
       <div class="features">${f('violet-l', 'calendar', 'Appointments')}${f('blue-l', 'briefcase', 'Work &amp; Leave')}${f('green', 'pulse', 'Health &amp; Fitness')}${f('orange', 'task', 'Tasks &amp; Goals')}</div>
       <button type="button" class="btn" data-a="getStarted">Get Started ${svg('right')}</button>
-      ${LB.sync && LB.sync.serviceState === 'ready' ? '<p class="small" style="margin:16px 0 0">Already have an account? <a href="#" data-a="welcomeSignIn">Sign In</a></p>' : ''}</div></section>`;
+      ${LB.sync && LB.sync.serviceState === 'ready' ? '<p class="small" style="margin:16px 0 0">Already have an account? <a href="#" data-a="welcomeSignIn">Sign In</a></p>' : ''}<p class="small powered">Powered by <b>Lamb Technologies</b></p></div></section>`;
   };
   A.getStarted = () => { LB.D.welcomed = true; LB.saveD(); LB.ui.view = null; LB.go('today'); return false; };
   A.welcomeSignIn = () => { LB.D.welcomed = true; LB.saveD(); LB.ui.view = 'settings'; LB.ui.focus = '#acE'; return true; };
