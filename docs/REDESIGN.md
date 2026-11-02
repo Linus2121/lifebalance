@@ -1,4 +1,4 @@
-# Premium redesign: version 1.2.0 · last updated 2026-11-02
+# Premium redesign: version 1.2.1 · last updated 2026-11-02
 
 LifeBalance now has the midnight-navy look from the approved reference image. The workflow was: reference image → Figma design → approved screens → this code.
 
@@ -18,6 +18,7 @@ The app keeps its existing architecture: a shared web codebase, packaged for And
 | Navigation | On phones and tablets: a floating bottom bar with Home, Events, a glowing **+** button (quick add) and Work, plus **More**, which holds Health, Habits, Journal, Progress, Settings, Alerts, Export backup and Demo mode. Screens opened from More have a "‹ More" back button. On screens 900 px and wider, every section appears in the top bar with an **Add** button. |
 | Home | Greeting and date chip. Four tiles: events today, tasks left, weekly fitness %, and water against goal. Then Next appointment, a Work & Leave card (this week's shifts and leave balance), and Health rings (workouts and active minutes against your weekly goals, and water against its goal). Daily balance, priorities, tasks, today's plan, task history and suggestions are all still there. |
 | Events | A segmented Upcoming/Past/Calendar switch and scrollable category chips with coloured icons (plus **All**). The gradient **+ Add appointment** button sits beneath the chips; with a category chosen it reads, for example, "Add Hospital appointment" and opens the form with that category set. Appointment cards have a coloured category tile and a bell when reminders are set. |
+| Events fix (1.2.1) | Choosing a category further along the chip row scrolls the row so the selected chip stays visible. Before, every redraw reset the row to the start. Only the row scrolls, not the page. |
 | Welcome | New first-launch screen. It appears only on a fresh install with no records. Existing users go straight to Home. "Sign In" appears only when the account service is reachable. |
 | Other screens | Work, Health, Habits, Journal, Progress, Settings, forms and dialogs keep their content and controls, restyled through the shared components. |
 | Version | 1.2.0 (Android versionCode 8). Updated in the footer, About, the Android badge, `package.json` and Gradle. Asset version tags are `20261102-work-17` and the offline cache is `lifebalance-work-17`, so installed web apps load the new files. |
