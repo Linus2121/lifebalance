@@ -10,7 +10,7 @@ function app(raw,{routes,failKey}={}){
   const fetch=async(url,o={})=>{const p=url.replace(/^.*?(\/api\/)/,'/api/'),m=(o.method||'GET')+' '+p;calls.push({m,auth:o.headers&&o.headers.Authorization,body:o.body&&JSON.parse(o.body)});const r=(routes[m]||(()=>[404,{error:'nf'}]))(o.body&&JSON.parse(o.body));return {ok:r[0]<300,status:r[0],json:async()=>r[1]};};
   const ctx={console,Intl,Date,Math,FormData,URL,Blob,JSON,setTimeout,clearTimeout,setInterval:()=>0,fetch,navigator:{onLine:true},addEventListener(){},document:{hidden:false,activeElement:{matches:()=>false},addEventListener(){},getElementById(){return {hidden:true,innerHTML:''}},querySelector(){return null}},localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>{if(failKey&&k===failKey)throw Error('quota');store.set(k,v);},removeItem:k=>store.delete(k)},scrollY:0,scrollTo(){}};
   ctx.window=ctx;vm.createContext(ctx);
-  for(const f of ['core','merge','meals','state','region','work','views-core','views-events','views-work','sync'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',f+'.js'),'utf8'),ctx,{filename:f});
+  for(const f of ['core','merge','meals','state','icons','region','work','views-core','views-events','views-work','sync'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',f+'.js'),'utf8'),ctx,{filename:f});
   const LB=ctx.LB;LB.start();LB.toasts=[];LB.toast=m=>LB.toasts.push(m);LB.rem={syncSoon(){}};LB.sync.serviceState='ready';
   return {LB,calls,store};
 }
@@ -130,7 +130,7 @@ test('every version label matches package.json',()=>{
 
 test('Add appointment under the category filters opens the form with the selected category',()=>{
   const {LB}=app(state(),{routes:{}});
-  assert.match(LB.views.events(),/data-a="newEvent"[^>]*>➕ Add appointment</);
+  assert.match(LB.views.events(),/data-a="newEvent"[^>]*><svg[^>]*><use href="#i-plus"\/><\/svg>Add appointment</);
   for(const c of C.CATS){
     LB.ui.cat='';LB.actions.evCat({dataset:{arg:c}});
     const h=LB.views.events();
@@ -138,4 +138,19 @@ test('Add appointment under the category filters opens the form with the selecte
     assert.ok(h.includes('Add '+c+' appointment'));
     LB.actions.newEvent();assert.equal(LB.ui.form.category,c);LB.ui.view=null;
   }
+});
+
+test('welcome shows once on a fresh install and is skipped for anyone with records',()=>{
+  const fresh=app(state(),{routes:{}}).LB;assert.equal(fresh.ui.view,'welcome');assert.match(fresh.views.welcome(),/data-a="getStarted"/);
+  fresh.actions.getStarted();assert.equal(fresh.D.welcomed,true);assert.equal(fresh.ui.view,null);
+  const s=state();s.tasks.push({id:'t',title:'mine',done:false,priority:false,date:T});
+  const existing=app(s,{routes:{}}).LB;assert.notEqual(existing.ui.view,'welcome');assert.equal(existing.D.welcomed,true);
+});
+
+test('More lists the sections not in the phone bar, and Home shows real summary data',()=>{
+  const s=state();s.fitness.workouts.push({id:'w',date:T,type:'running',name:'',minutes:30,distanceKm:5,notes:'',exercises:[]});
+  const {LB}=app(s,{routes:{}});
+  const more=LB.views.more();for(const t of ['wellness','habits','journal','progress'])assert.match(more,new RegExp('data-a="go" data-arg="'+t+'"'));
+  assert.match(more,/data-a="openSettings"/);assert.match(more,/data-a="exportData"/);
+  const home=LB.views.today();assert.match(home,/id="nxH"/);assert.match(home,/Health &amp; Wellness/);assert.match(home,/aria-label="1\/3 workouts"/);assert.doesNotMatch(home,/\bkcal\b|\d[\d,]* steps/i);
 });

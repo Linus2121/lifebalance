@@ -14,7 +14,7 @@
   const WORKOUT_TYPES = { walking: 'Walking', running: 'Running', cycling: 'Cycling', gym: 'Gym session', custom: 'Custom activity' };
   const MEAL_SLOTS = ['breakfast', 'lunch', 'dinner', 'snack'];
   const ALL_DAY_TIME = '09:00';
-  const APP_VERSION = '1.1.1', APP_UPDATED = '2026-10-31';
+  const APP_VERSION = '1.2.0', APP_UPDATED = '2026-11-02';
 
   /* ---------- dates (date keys are YYYY-MM-DD, handled in UTC so they never shift) ---------- */
   const pad = n => String(n).padStart(2, '0');

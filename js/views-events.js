@@ -18,9 +18,9 @@
   LB.occRow = (o, opt) => {
     opt = opt || {};
     const a = `data-id="${o.evId}" data-key="${o.key}"`, t = esc(o.title);
-    return `<div class="ev ${o.cancelled ? 'cancelled' : ''}"><div class="ico" role="img" aria-label="${esc(o.category)}">${icon(o.category)}</div><div class="body">
-      <div class="ttl2"><b>${t}</b> ${o.cancelled ? '<span class="badge warn">Cancelled</span>' : ''}${o.recurring ? '<span class="badge">\ud83d\udd01 Repeats</span>' : ''}${o.modified ? '<span class="badge">Changed</span>' : ''}${o.hasReminders ? '<span class="badge" title="Reminders set">\ud83d\udd14</span>' : ''}</div>
-      <div class="small">${esc(o.category)} \u00b7 ${esc(occWhen(o))}</div>${o.location ? `<div class="small">\ud83d\udccd ${esc(o.location)}</div>` : ''}${o.bookingRef ? `<div class="small">\ud83c\udfab Booking ref: ${esc(o.bookingRef)}</div>` : ''}
+    return `<div class="ev ${LB.catClass(o.category)} ${o.cancelled ? 'cancelled' : ''}"><div class="ico" role="img" aria-label="${esc(o.category)}">${LB.catSvg(o.category)}</div><div class="body">
+      <div class="ttl2"><b>${t}</b> ${o.cancelled ? '<span class="badge warn">Cancelled</span>' : ''}${o.recurring ? '<span class="badge">Repeats</span>' : ''}${o.modified ? '<span class="badge">Changed</span>' : ''}</div>${o.hasReminders ? `<span class="bell" role="img" aria-label="Reminders set" title="Reminders set">${LB.svg('bell')}</span>` : ''}
+      <div class="small">${LB.svg('clock', 'sm')}<span>${esc(o.category)} \u00b7 ${esc(occWhen(o))}</span></div>${o.location ? `<div class="small">${LB.svg('pin', 'sm')}<span>${esc(o.location)}</span></div>` : ''}${o.bookingRef ? `<div class="small">\ud83c\udfab Booking ref: ${esc(o.bookingRef)}</div>` : ''}
       ${!opt.compact && o.notes ? `<div class="small muted">${esc(o.notes)}</div>` : ''}
       ${!opt.compact && o.contact && (o.contact.name || o.contact.phone || o.contact.email) ? `<div class="small">\ud83d\udc64 ${esc([o.contact.name, o.contact.phone, o.contact.email].filter(Boolean).join(' \u00b7 '))}</div>` : ''}
       <div class="row" style="margin-top:6px"><button type="button" class="btn alt sm" data-a="editOcc" ${a} aria-label="Edit ${t}">Edit</button>
@@ -58,14 +58,14 @@
   A.calMove = el => { const m = ui.calMonth || LB.today().slice(0, 8) + '01'; ui.calMonth = C.addMonths(m, +el.dataset.arg, 1); };
   A.calSel = el => { ui.calSel = el.dataset.arg; };
   A.evView = el => { ui.evView = el.dataset.arg; };
-  A.evCat = el => { ui.cat = ui.cat === el.dataset.arg ? '' : el.dataset.arg; };
+  A.evCat = el => { ui.cat = !el.dataset.arg || ui.cat === el.dataset.arg ? '' : el.dataset.arg; };
   LB.inputs.evSearch = el => { ui.q = el.value; const r = document.getElementById('evResults'); if (r) r.innerHTML = listHtml(); };
   V.events = function () {
-    return `<h2>Events &amp; appointments</h2>
-      <section class="card"><div class="seg" role="group" aria-label="View">${[['upcoming', 'Upcoming'], ['past', 'Past'], ['cal', 'Calendar']].map(v => `<button type="button" data-a="evView" data-arg="${v[0]}" aria-pressed="${ui.evView === v[0]}">${v[1]}</button>`).join('')}</div>
+    return `<h2>Events &amp; Appointments</h2>
+      <section class="card"><div class="seg views" role="group" aria-label="View">${[['upcoming', 'Upcoming'], ['past', 'Past'], ['cal', 'Calendar']].map(v => `<button type="button" data-a="evView" data-arg="${v[0]}" aria-pressed="${ui.evView === v[0]}">${v[1]}</button>`).join('')}</div>
       <div class="field"><label for="evq">Search events</label><input type="search" id="evq" value="${esc(ui.q)}" data-i="evSearch" placeholder="Title, place or notes" autocomplete="off"></div>
-      <div class="seg" role="group" aria-label="Filter by category">${C.CATS.map(c => `<button type="button" data-a="evCat" data-arg="${c}" aria-pressed="${ui.cat === c}">${icon(c)} ${c}</button>`).join('')}</div>
-      <button type="button" class="btn big" data-a="newEvent" style="margin:14px 0">➕ Add ${ui.cat ? esc(ui.cat) + ' ' : ''}appointment</button>
+      <div class="seg chips" role="group" aria-label="Filter by category"><button type="button" data-a="evCat" data-arg="" aria-pressed="${!ui.cat}">All</button>${C.CATS.map(c => `<button type="button" class="${LB.catClass(c)}" data-a="evCat" data-arg="${c}" aria-pressed="${ui.cat === c}">${LB.catSvg(c)} ${c}</button>`).join('')}</div>
+      <button type="button" class="btn big" data-a="newEvent" style="margin:0 0 16px">${LB.svg('plus')}Add ${ui.cat ? esc(ui.cat) + ' ' : ''}appointment</button>
       <div id="evResults">${listHtml()}</div></section>`;
   };
 

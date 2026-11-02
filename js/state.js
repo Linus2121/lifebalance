@@ -117,14 +117,20 @@
   };
 
   /* ---------- rendering ---------- */
-  const TABS = [['today', '\ud83c\udfe0', 'Today'], ['habits', '\u2705', 'Habits'], ['journal', '\ud83d\udcd4', 'Journal'], ['events', '\ud83d\udcc5', 'Events'], ['wellness', '\ud83d\udcaa', 'Wellness'], ['work', '\ud83d\udcbc', 'Work'], ['progress', '\ud83d\udcca', 'Progress']];
+  // Phones show Home, Events, +, Work and More; wide screens show every section (CSS decides which are visible).
+  const TABS = [['today', 'home', 'Home'], ['events', 'calendar', 'Events'], ['work', 'briefcase', 'Work'], ['wellness', 'pulse', 'Health'], ['habits', 'task', 'Habits'], ['journal', 'book', 'Journal'], ['progress', 'chart', 'Progress'], ['more', 'grid', 'More']];
+  LB.MORE_TABS = ['habits', 'journal', 'wellness', 'progress'];
   LB.go = tab => { LB.ui.tab = tab; LB.ui.view = null; LB.render(true); };
   LB.render = top => {
     const app = document.getElementById('app'), y = window.scrollY;
     const view = LB.ui.view || LB.ui.tab;
-    try { app.innerHTML = LB.views[view](); }
+    const back = !LB.ui.view && LB.MORE_TABS.includes(LB.ui.tab) ? '<button type="button" class="btn alt sm backmore" data-a="go" data-arg="more">‹ More</button>' : '';
+    try { app.innerHTML = back + LB.views[view](); }
     catch (e) { console.error(e); app.innerHTML = '<div class="card err" role="alert">Something went wrong showing this page. Your data is safe. <button class="btn sm" data-a="go" data-arg="today">Go to Today</button></div>'; }
-    document.getElementById('tabs').innerHTML = TABS.map(t => '<button type="button" data-a="go" data-arg="' + t[0] + '"' + (LB.ui.tab === t[0] ? ' aria-current="page"' : '') + '><span class="ic" aria-hidden="true">' + t[1] + '</span>' + t[2] + '</button>').join('');
+    const svg = LB.svg || (() => ''), tab = LB.ui.tab, inMore = LB.MORE_TABS.includes(tab) || LB.ui.view === 'settings';
+    document.getElementById('tabs').innerHTML = TABS.map(t => '<button type="button" data-a="go" data-arg="' + t[0] + '"' + (tab === t[0] || (t[0] === 'more' && inMore) ? ' aria-current="page"' : '') + '>' + svg(t[1]) + t[2] + '</button>').join('') +
+      '<button type="button" class="add" data-a="quickAdd" aria-haspopup="dialog" aria-label="Add">' + svg('plus') + '<span class="lbl">Add</span></button>';
+    if (document.body) document.body.classList.toggle('welcoming', LB.ui.view === 'welcome');
     document.getElementById('demoBar').hidden = !LB.D.demo;
     document.getElementById('demoBar').innerHTML = LB.D.demo ? '\ud83e\uddea <b>Demo mode</b> \u2013 sample data only. Your own data is untouched. <button type="button" class="btn sm" data-a="exitDemo">Exit demo</button>' : '';
     LB.hooks.forEach(h => h());
@@ -147,5 +153,7 @@
   LB.actions.go = el => { LB.go(el.dataset.arg); return false; };
   LB.actions.exitDemo = () => { LB.exitDemo(); return false; };
 
-  LB.start = () => { load(); LB.render(true); if (LB.loadNotice) LB.toast(LB.loadNotice); };
+  // The welcome screen appears once, on a fresh install; anyone who already has records goes straight to Home.
+  const firstRun = () => { const S = LB.personal; return !LB.D.welcomed && !LB.D.demo && !S.tasks.length && !S.events.length && !S.journal.length && !Object.keys(S.logs || {}).length && !S.fitness.workouts.length && !S.work.leave.length; };
+  LB.start = () => { load(); if (firstRun()) LB.ui.view = 'welcome'; else if (!LB.D.welcomed) { LB.D.welcomed = true; LB.saveD(); } LB.render(true); if (LB.loadNotice) LB.toast(LB.loadNotice); };
 })();
