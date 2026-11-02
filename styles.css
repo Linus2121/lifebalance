@@ -338,3 +338,16 @@ footer .small{font-size:12px}
 .welcome-screen .logo{padding:10px;border-radius:50%;background:rgba(7,10,26,.75);box-shadow:0 0 0 1px rgba(212,250,57,.3)}
 footer b,.powered b{color:#D4FA39;font-weight:700}
 .welcome-screen .powered{margin:18px 0 0;color:var(--muted)}
+
+/* ---------- wordmark: bold white "Life" + electric-blue to cyan "Balance" (header, welcome, About) ---------- */
+.wordmark{font-weight:800;letter-spacing:-.02em;color:#fff;white-space:nowrap}
+.wordmark>span{background:linear-gradient(90deg,#2F7BFF 0%,#1FB6FF 45%,#22D3EE 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.brand .wordmark{line-height:1}
+.welcome-screen h1 .wordmark{font-size:inherit}
+@media(forced-colors:active){.wordmark>span{background:none;color:CanvasText;-webkit-text-fill-color:CanvasText}}
+.welcome-screen h1{text-shadow:none}
+.welcome-screen h1 .wordmark{filter:drop-shadow(0 2px 14px rgba(0,0,0,.45))}
+/* Wide screens: keep Alerts and Settings at the right edge, clear of the centred section links. */
+@media(min-width:900px){header.top .brand{flex:1}}
+/* Narrow desktops (900-1099px): icons only in the top bar; the label stays the button's accessible name and tooltip. */
+@media(min-width:900px) and (max-width:1099px){nav.tabs button[data-arg]{font-size:0;gap:0;padding:0 12px}nav.tabs button[data-arg] .ic{width:22px;height:22px}}

@@ -128,7 +128,7 @@
     try { app.innerHTML = back + LB.views[view](); }
     catch (e) { console.error(e); app.innerHTML = '<div class="card err" role="alert">Something went wrong showing this page. Your data is safe. <button class="btn sm" data-a="go" data-arg="today">Go to Today</button></div>'; }
     const svg = LB.svg || (() => ''), tab = LB.ui.tab, inMore = LB.MORE_TABS.includes(tab) || LB.ui.view === 'settings';
-    document.getElementById('tabs').innerHTML = TABS.map(t => '<button type="button" data-a="go" data-arg="' + t[0] + '"' + (tab === t[0] || (t[0] === 'more' && inMore) ? ' aria-current="page"' : '') + '>' + svg(t[1]) + t[2] + '</button>').join('') +
+    document.getElementById('tabs').innerHTML = TABS.map(t => '<button type="button" data-a="go" data-arg="' + t[0] + '" title="' + t[2] + '"' + (tab === t[0] || (t[0] === 'more' && inMore) ? ' aria-current="page"' : '') + '>' + svg(t[1]) + t[2] + '</button>').join('') +
       '<button type="button" class="add" data-a="quickAdd" aria-haspopup="dialog" aria-label="Add">' + svg('plus') + '<span class="lbl">Add</span></button>';
     if (document.body) document.body.classList.toggle('welcoming', LB.ui.view === 'welcome');
     document.getElementById('demoBar').hidden = !LB.D.demo;

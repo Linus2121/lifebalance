@@ -154,3 +154,10 @@ test('More lists the sections not in the phone bar, and Home shows real summary 
   assert.match(more,/data-a="openSettings"/);assert.match(more,/data-a="exportData"/);
   const home=LB.views.today();assert.match(home,/id="nxH"/);assert.match(home,/Health &amp; Wellness/);assert.match(home,/aria-label="1\/3 workouts"/);assert.doesNotMatch(home,/\bkcal\b|\d[\d,]* steps/i);
 });
+
+test('the two-tone LifeBalance wordmark appears in the header, welcome screen and About',()=>{
+  const {LB}=app(state(),{routes:{}}),mark='<span class="wordmark">Life<span>Balance</span></span>';
+  assert.ok(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8').includes(mark));
+  assert.ok(LB.views.welcome().includes(mark));
+  assert.equal(LB.wordmark(),mark);
+});
