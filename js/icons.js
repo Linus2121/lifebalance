@@ -45,6 +45,6 @@
   LB.svg = (name, cls) => '<svg class="ic' + (cls ? ' ' + cls : '') + '" aria-hidden="true" focusable="false"><use href="#i-' + name + '"/></svg>';
   LB.catSvg = (cat, cls) => LB.svg(CAT[cat] || 'thumbtack', cls);
   LB.catClass = cat => 'c-' + (CAT[cat] ? cat : 'General');
-  // Brand mark: figure with raised arms over a balance swoosh.
-  LB.logoSvg = (size, cls) => '<svg class="logo' + (cls ? ' ' + cls : '') + '" viewBox="0 0 48 48" width="' + size + '" height="' + size + '" aria-hidden="true" focusable="false"><circle cx="27" cy="8" r="5" fill="url(#lg-a)"/><path d="M6 14c6 10 13 14 20 12 6-2 10-8 15-18-2 12-6 22-16 26C16 37 8 27 6 14z" fill="url(#lg-b)"/><path d="M14 44c4-10 12-15 24-16-8 4-13 9-15 16z" fill="#3D7BFF" opacity=".9"/></svg>';
+  // LifeBalance brand mark (vector copy of logo.png: ring with three linked dots); spins clockwise via CSS.
+  LB.logoSvg = (size, cls) => '<svg class="logo' + (cls ? ' ' + cls : '') + '" viewBox="0 0 48 48" width="' + size + '" height="' + size + '" aria-hidden="true" focusable="false"><g fill="none" stroke="#D4FA39" stroke-linecap="round"><circle cx="24" cy="24" r="6.8" stroke-width="2.6"/><path d="M21.3 17.8 18.6 11.3M30.7 25.4l6.4 1.4M19.9 29.3l-4.6 5.6" stroke-width="2"/></g><g fill="#D4FA39"><circle cx="17.8" cy="8" r="3.4"/><circle cx="40.4" cy="27.4" r="3.4"/><circle cx="13.2" cy="37.4" r="3.4"/></g></svg>';
 })();

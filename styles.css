@@ -329,3 +329,12 @@ footer .small{font-size:12px}
 #remNote{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:4px 10px}
 #remNote .btn{grid-column:1/-1;justify-self:end;margin:4px 0 0}
 @media(min-width:900px){.home-grid .side .ring{width:80px;height:80px}.home-grid .side .ring b{font-size:16px}.home-grid .side .rings{flex-wrap:nowrap;gap:4px}}
+
+/* ---------- brand mark: the LifeBalance logo spins clockwise (owner's request); still for reduced-motion users ---------- */
+@keyframes logo-clockwise{to{transform:rotate(360deg)}}
+.logo{transform-origin:50% 50%;animation:logo-clockwise 6s linear infinite;filter:drop-shadow(0 0 8px rgba(212,250,57,.35))}
+@media(prefers-reduced-motion:reduce){.logo{animation:none}}
+.brand .logo{padding:3px;border-radius:50%;background:#070A1A;box-shadow:0 0 0 1px rgba(212,250,57,.25)}
+.welcome-screen .logo{padding:10px;border-radius:50%;background:rgba(7,10,26,.75);box-shadow:0 0 0 1px rgba(212,250,57,.3)}
+footer b,.powered b{color:#D4FA39;font-weight:700}
+.welcome-screen .powered{margin:18px 0 0;color:var(--muted)}

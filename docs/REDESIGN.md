@@ -1,4 +1,4 @@
-# Premium redesign: version 1.2.1 · last updated 2026-11-02
+# Premium redesign: version 1.2.2 · last updated 2026-11-02
 
 LifeBalance now has the midnight-navy look from the approved reference image. The workflow was: reference image → Figma design → approved screens → this code.
 
@@ -19,6 +19,7 @@ The app keeps its existing architecture: a shared web codebase, packaged for And
 | Home | Greeting and date chip. Four tiles: events today, tasks left, weekly fitness %, and water against goal. Then Next appointment, a Work & Leave card (this week's shifts and leave balance), and Health rings (workouts and active minutes against your weekly goals, and water against its goal). Daily balance, priorities, tasks, today's plan, task history and suggestions are all still there. |
 | Events | A segmented Upcoming/Past/Calendar switch and scrollable category chips with coloured icons (plus **All**). The gradient **+ Add appointment** button sits beneath the chips; with a category chosen it reads, for example, "Add Hospital appointment" and opens the form with that category set. Appointment cards have a coloured category tile and a bell when reminders are set. |
 | Events fix (1.2.1) | Choosing a category further along the chip row scrolls the row so the selected chip stays visible. Before, every redraw reset the row to the start. Only the row scrolls, not the page. |
+| Logo (1.2.2) | The LifeBalance logo (the ring with three linked dots from `logo.png`) is back in the top bar and on the Welcome screen. It replaces the reference image's figure mark and spins clockwise as before (it stays still if the device is set to reduce motion). It is drawn as a vector copy so it stays sharp at any size. The footer reads "Powered by **Lamb Technologies**". |
 | Welcome | New first-launch screen. It appears only on a fresh install with no records. Existing users go straight to Home. "Sign In" appears only when the account service is reachable. |
 | Other screens | Work, Health, Habits, Journal, Progress, Settings, forms and dialogs keep their content and controls, restyled through the shared components. |
 | Version | 1.2.0 (Android versionCode 8). Updated in the footer, About, the Android badge, `package.json` and Gradle. Asset version tags are `20261102-work-17` and the offline cache is `lifebalance-work-17`, so installed web apps load the new files. |
@@ -27,7 +28,7 @@ The app keeps its existing architecture: a shared web codebase, packaged for And
 
 **Intentional differences from the reference image:**
 - No profile photo or personal name in the greeting. The app doesn't store either, and adding them would be a new feature.
-- The launcher icon and favicon (`logo.png`, `icons/`) are unchanged. The new logo mark appears inside the app. Changing the launcher icon needs new Android icon resources; say if you want this.
+- The app keeps its own LifeBalance logo rather than the figure mark shown in the reference image. The launcher icon and favicon (`logo.png`, `icons/`) are unchanged.
 
 ## Tests
 
